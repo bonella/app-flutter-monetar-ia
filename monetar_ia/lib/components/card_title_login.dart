@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:monetar_ia/components/card_btn_login.dart';
 
-class CardTitle extends StatelessWidget {
-  const CardTitle({super.key});
+class CardTitleLogin extends StatelessWidget {
+  const CardTitleLogin({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +19,7 @@ class CardTitle extends StatelessWidget {
         children: [
           Container(
             width: 304,
-            height: 72,
+            height: 94,
             margin: const EdgeInsets.only(top: 35, bottom: 20),
             child: const Center(
               child: Text(

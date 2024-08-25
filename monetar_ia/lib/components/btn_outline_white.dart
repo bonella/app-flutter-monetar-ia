@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
 
-class BtnSignUp extends StatelessWidget {
+class BtnOutlineWhite extends StatelessWidget {
   final VoidCallback onPressed;
+  final String text;
+  final Color backgroundColor;
+  final Color borderColor;
+  final Color textColor;
 
-  const BtnSignUp({super.key, required this.onPressed});
+  const BtnOutlineWhite({
+    super.key,
+    required this.onPressed,
+    required this.text,
+    this.backgroundColor = const Color(0xFF738C61),
+    this.borderColor = Colors.white,
+    this.textColor = Colors.white,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -11,10 +22,10 @@ class BtnSignUp extends StatelessWidget {
       width: 260,
       height: 50,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(100),
         border: Border.all(
-          color: const Color(0xFF738C61),
+          color: borderColor,
           width: 2,
         ),
       ),
@@ -26,11 +37,11 @@ class BtnSignUp extends StatelessWidget {
             borderRadius: BorderRadius.circular(100),
           ),
         ),
-        child: const Center(
+        child: Center(
           child: Text(
-            'Cadastrar',
+            text,
             style: TextStyle(
-              color: Color(0xFF738C61),
+              color: textColor,
               fontSize: 16,
             ),
           ),

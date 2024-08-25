@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:monetar_ia/components/btn_outline_green.dart';
 
 class CardRegister extends StatelessWidget {
   const CardRegister({super.key});
@@ -6,37 +7,58 @@ class CardRegister extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      // width: double.infinity,
-      width: MediaQuery.of(context).size.width *
-          1, // Ajusta a largura do card para 90% da largura da tela
+      width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            _buildLabel('Nome:', context),
-            _buildInput(context),
-            const SizedBox(height: 20),
-            _buildLabel('Sobrenome:', context),
-            _buildInput(context),
-            const SizedBox(height: 20),
-            _buildLabel('CPF:', context),
-            _buildInput(context),
-            const SizedBox(height: 20),
-            _buildLabel('Salário:', context),
-            _buildInput(context),
-            const SizedBox(height: 20),
-            _buildLabel('E-mail:', context),
-            _buildInput(context),
-            const SizedBox(height: 20),
-            _buildLabel('Senha:', context),
-            _buildInput(context, hasBottomMargin: true), //
-          ],
-        ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                _buildLabel('Nome:', context),
+                _buildInput(context),
+                const SizedBox(height: 10),
+                _buildLabel('Sobrenome:', context),
+                _buildInput(context),
+                const SizedBox(height: 10),
+                _buildLabel('CPF:', context),
+                _buildInput(context),
+                const SizedBox(height: 10),
+                _buildLabel('Salário:', context),
+                _buildInput(context),
+                const SizedBox(height: 10),
+                _buildLabel('E-mail:', context),
+                _buildInput(context),
+                const SizedBox(height: 10),
+                _buildLabel('Senha:', context),
+                _buildInput(context),
+                const SizedBox(height: 40),
+              ],
+            ),
+          ),
+          Positioned(
+            bottom: -25,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 260),
+                child: BtnOutlineGreen(
+                  onPressed: () {
+                    // Ação ao pressionar o botão
+                    print("Botão de cadastrar pressionado");
+                  },
+                  text: 'Cadastrar',
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -59,7 +81,7 @@ class CardRegister extends StatelessWidget {
   Widget _buildInput(BuildContext context, {bool hasBottomMargin = false}) {
     return Container(
       margin: hasBottomMargin
-          ? const EdgeInsets.only(bottom: 40.0)
+          ? const EdgeInsets.only(bottom: 1.0)
           : EdgeInsets.zero,
       child: TextField(
         decoration: InputDecoration(
@@ -80,7 +102,7 @@ class CardRegister extends StatelessWidget {
           filled: true,
           fillColor: Colors.white,
           contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         ),
       ),
     );

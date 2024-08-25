@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:monetar_ia/components/btn_enter.dart';
-import 'package:monetar_ia/components/btn_sign_up.dart';
+import 'package:monetar_ia/components/btn_outline_white.dart';
+import 'package:monetar_ia/components/btn_outline_green.dart';
 import 'package:monetar_ia/views/register_page.dart';
+import 'package:monetar_ia/views/first_steps_page.dart';
 
 class CardBtnLogin extends StatelessWidget {
   const CardBtnLogin({super.key});
@@ -48,7 +49,6 @@ class CardBtnLogin extends StatelessWidget {
             const SizedBox(height: 40),
             const Center(
               child: Icon(
-                // Icons.keyboard_arrow_down,
                 Icons.arrow_downward,
                 color: Colors.white,
                 size: 60.0,
@@ -104,15 +104,21 @@ class CardBtnLogin extends StatelessWidget {
             ),
             const SizedBox(height: 40.0),
             Center(
-              child: BtnEnter(
+              child: BtnOutlineWhite(
                 onPressed: () {
-                  // Ação ao clicar no botão de login
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const FirstStepsPage(),
+                    ),
+                  );
                 },
+                text: 'Entrar',
               ),
             ),
             const SizedBox(height: 16.0),
             Center(
-              child: BtnSignUp(
+              child: BtnOutlineGreen(
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -120,9 +126,10 @@ class CardBtnLogin extends StatelessWidget {
                         builder: (context) => const RegisterPage()),
                   );
                 },
+                text: 'Cadastrar', // Adicione o texto aqui
               ),
             ),
-            const SizedBox(height: 16.0),
+            const SizedBox(height: 36.0),
             TextButton(
               onPressed: () {
                 // Ação ao clicar no link "Esqueceu a senha?"

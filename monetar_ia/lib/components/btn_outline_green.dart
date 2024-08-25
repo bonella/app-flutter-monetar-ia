@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
 
-class BtnEnter extends StatelessWidget {
+class BtnOutlineGreen extends StatelessWidget {
   final VoidCallback onPressed;
+  final String text;
+  final Color textColor;
+  final Color borderColor;
 
-  const BtnEnter({super.key, required this.onPressed});
+  const BtnOutlineGreen({
+    super.key,
+    required this.onPressed,
+    required this.text,
+    this.textColor = const Color(0xFF738C61),
+    this.borderColor = const Color(0xFF738C61),
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -11,10 +20,10 @@ class BtnEnter extends StatelessWidget {
       width: 260,
       height: 50,
       decoration: BoxDecoration(
-        color: const Color(0xFF738C61),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(100),
         border: Border.all(
-          color: Colors.white,
+          color: borderColor,
           width: 2,
         ),
       ),
@@ -26,11 +35,11 @@ class BtnEnter extends StatelessWidget {
             borderRadius: BorderRadius.circular(100),
           ),
         ),
-        child: const Center(
+        child: Center(
           child: Text(
-            'Entrar',
+            text,
             style: TextStyle(
-              color: Colors.white,
+              color: textColor,
               fontSize: 16,
             ),
           ),

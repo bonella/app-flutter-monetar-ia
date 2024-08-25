@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:monetar_ia/components/card_register.dart';
+import 'package:monetar_ia/components/card_first_steps.dart';
+import 'package:monetar_ia/views/first_steps_page2.dart';
 
-class RegisterPage extends StatelessWidget {
-  const RegisterPage({super.key});
+class FirstStepsPage extends StatelessWidget {
+  const FirstStepsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +40,7 @@ class RegisterPage extends StatelessWidget {
                     Container(
                       alignment: Alignment.center,
                       child: const Text(
-                        'Cadastro:',
+                        'Primeiros Passos:',
                         style: TextStyle(
                           fontFamily: 'Kumbh Sans',
                           fontWeight: FontWeight.w400,
@@ -51,7 +52,25 @@ class RegisterPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    const CardRegister(),
+                    CardFirstSteps(
+                      title: 'Quais seus objetivos com a Monetar.ia?',
+                      buttonLabels: const [
+                        'Entender meus gastos',
+                        'Descobrir o que mais me prejudica',
+                        'Ter previsões sobre meus gastos',
+                        'Criar planejamento financeiro',
+                        'Centralizar meus gastos em um só local',
+                        'Descobrir padrões de gastos',
+                      ],
+                      onNextPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const FirstStepsPage2(),
+                          ),
+                        );
+                      },
+                    ),
                     const SizedBox(height: 20),
                   ],
                 ),
