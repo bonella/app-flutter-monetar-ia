@@ -59,7 +59,7 @@ class HomePage extends StatelessWidget {
                 color: Colors.white,
                 fontFamily: 'Kumbh Sans',
                 fontWeight: FontWeight.w400,
-                fontSize: 16,
+                fontSize: 66,
               ),
             ),
           ),
