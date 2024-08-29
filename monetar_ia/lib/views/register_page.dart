@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:monetar_ia/components/card_register.dart';
+import 'package:monetar_ia/components/cards/card_register.dart';
 
 class RegisterPage extends StatelessWidget {
   const RegisterPage({super.key});

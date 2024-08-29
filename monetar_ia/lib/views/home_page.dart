@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:monetar_ia/components/header_home.dart';
-import 'package:monetar_ia/components/info_box.dart';
-import 'package:monetar_ia/components/chart.dart';
+import 'package:monetar_ia/components/headers/header_home.dart';
+import 'package:monetar_ia/components/boxes/info_box.dart';
+import 'package:monetar_ia/components/graphics/chart.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -14,61 +14,52 @@ class HomePage extends StatelessWidget {
         children: [
           HeaderHome(
             month: 'Agosto',
-            onPrevMonth: () {
-              // Navegar para o mês anterior
-            },
-            onNextMonth: () {
-              // Navegar para o próximo mês
-            },
+            onPrevMonth: () {},
+            onNextMonth: () {},
           ),
-          // Adicionar informações abaixo dos blocos financeiros
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 16.0),
             child: Column(
               children: [
                 InfoBox(
-                  title: '10 mil reais',
-                  description: 'Total do mês de agosto:',
+                  title: 'Total do mês de agosto:',
+                  description: '10 mil reais',
                   showBadge: true,
+                  percentage: '+2,5%',
                 ),
                 SizedBox(height: 16),
                 InfoBox(
-                  title: 'Outro título',
-                  description: 'Descrição aqui',
+                  title: 'Total da meta atual',
+                  description: '4%',
+                  showBadge: true,
+                  percentage: '-1,2%',
                 ),
               ],
             ),
           ),
-          // Adicionar gráfico
           const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16.0),
+            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
             child: Chart(),
           ),
         ],
       ),
-      // Adicionar o footer e o botão flutuante fora da coluna
       bottomNavigationBar: BottomAppBar(
         child: Container(
           width: double.infinity,
           height: 80,
           color: const Color(0xFF738C61),
-          child: const Center(
-            child: Text(
-              'Footer',
-              style: TextStyle(
-                color: Colors.white,
-                fontFamily: 'Kumbh Sans',
-                fontWeight: FontWeight.w400,
-                fontSize: 66,
-              ),
-            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildRoundButton(Icons.add, 'Adicionar'),
+              _buildRoundButton(Icons.mic, 'Microfone'),
+              _buildRoundButton(Icons.person, 'Perfil'),
+            ],
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Ação ao pressionar o botão flutuante
-        },
+        onPressed: () {},
         backgroundColor: Colors.white,
         child: const Text(
           '+',
@@ -81,6 +72,25 @@ class HomePage extends StatelessWidget {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+    );
+  }
+
+  Widget _buildRoundButton(IconData icon, String label) {
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        border: Border.all(color: const Color(0xFF3D5936), width: 2),
+      ),
+      child: Center(
+        child: Icon(
+          icon,
+          color: const Color(0xFF3D5936),
+          size: 30,
+        ),
+      ),
     );
   }
 }

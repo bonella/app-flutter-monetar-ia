@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:monetar_ia/components/card_first_steps.dart';
+import 'package:monetar_ia/components/cards/card_first_steps.dart';
 import 'package:monetar_ia/views/home_page.dart'; // Certifique-se de importar a HomePage
 
 class FirstStepsPage2 extends StatelessWidget {
