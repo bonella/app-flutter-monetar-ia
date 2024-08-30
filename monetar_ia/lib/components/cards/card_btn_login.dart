@@ -126,7 +126,7 @@ class CardBtnLogin extends StatelessWidget {
                         builder: (context) => const RegisterPage()),
                   );
                 },
-                text: 'Cadastrar', // Adicione o texto aqui
+                text: 'Cadastrar',
               ),
             ),
             const SizedBox(height: 36.0),

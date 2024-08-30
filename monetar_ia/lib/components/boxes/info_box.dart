@@ -5,6 +5,8 @@ class InfoBox extends StatelessWidget {
   final String description;
   final bool showBadge;
   final String percentage;
+  final Color borderColor;
+  final Color badgeColor;
 
   const InfoBox({
     super.key,
@@ -12,38 +14,37 @@ class InfoBox extends StatelessWidget {
     required this.description,
     this.showBadge = false,
     this.percentage = '',
+    this.borderColor = const Color(0xFF3D5936),
+    this.badgeColor = const Color(0xFF3D5936),
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: 361,
-      height: 90,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFF3D5936), width: 2),
+        border: Border.all(color: borderColor, width: 2),
       ),
-      child: Stack(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Text(
+            title,
+            style: const TextStyle(
+              fontFamily: 'Roboto',
+              fontWeight: FontWeight.w400,
+              fontSize: 12,
+              color: Color(0xFF697077),
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 8),
+          Row(
             children: [
-              Flexible(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontFamily: 'Roboto',
-                    fontWeight: FontWeight.w400,
-                    fontSize: 12,
-                    color: Color(0xFF697077),
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Flexible(
+              Expanded(
                 child: Text(
                   description,
                   style: const TextStyle(
@@ -55,34 +56,29 @@ class InfoBox extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-            ],
-          ),
-          if (showBadge)
-            Positioned(
-              right: 0,
-              top: 0,
-              bottom: 0,
-              child: Container(
-                width: 60,
-                // height: 20,
-                margin: const EdgeInsets.symmetric(horizontal: 6.0),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF3D5936),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white, width: 2),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  percentage,
-                  style: const TextStyle(
-                    fontFamily: 'Roboto',
-                    fontWeight: FontWeight.w400,
-                    fontSize: 12,
-                    color: Colors.white,
+              if (showBadge)
+                Container(
+                  margin: const EdgeInsets.only(left: 8),
+                  width: 60,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: badgeColor,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    percentage,
+                    style: const TextStyle(
+                      fontFamily: 'Roboto',
+                      fontWeight: FontWeight.w400,
+                      fontSize: 12,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
-              ),
-            ),
+            ],
+          ),
         ],
       ),
     );
