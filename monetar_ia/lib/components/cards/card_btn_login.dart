@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:monetar_ia/components/btn_outline_white.dart';
-import 'package:monetar_ia/components/btn_outline_green.dart';
+import 'package:monetar_ia/components/buttons/btn_outline_white.dart';
+import 'package:monetar_ia/components/buttons/btn_outline_green.dart';
 import 'package:monetar_ia/views/register_page.dart';
 import 'package:monetar_ia/views/first_steps_page.dart';
 
@@ -126,7 +126,7 @@ class CardBtnLogin extends StatelessWidget {
                         builder: (context) => const RegisterPage()),
                   );
                 },
-                text: 'Cadastrar', // Adicione o texto aqui
+                text: 'Cadastrar',
               ),
             ),
             const SizedBox(height: 36.0),

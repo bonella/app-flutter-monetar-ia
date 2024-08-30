@@ -1,28 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:monetar_ia/components/header_login.dart';
-import 'package:monetar_ia/components/card_title_login.dart';
+import 'package:monetar_ia/components/headers/header_login.dart';
+import 'package:monetar_ia/components/cards/card_title_login.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final double screenHeight = MediaQuery.of(context).size.height;
+
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
 
-    return const Scaffold(
+    return Scaffold(
       body: Stack(
         children: <Widget>[
-          HeaderLogin(),
+          // Cabeçalho fixo
+          const HeaderLogin(),
           Positioned(
-            top: 300,
+            top: screenHeight * 0.4,
             left: 0,
             right: 0,
             bottom: 0,
-            child: SingleChildScrollView(
+            child: const SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[

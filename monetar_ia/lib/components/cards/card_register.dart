@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:monetar_ia/components/btn_outline_green.dart';
+import 'package:monetar_ia/components/buttons/btn_outline_green.dart';
 
 class CardRegister extends StatelessWidget {
   const CardRegister({super.key});
