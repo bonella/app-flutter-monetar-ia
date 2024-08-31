@@ -41,7 +41,6 @@ class InfoBox extends StatelessWidget {
             ),
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 8),
           Row(
             children: [
               Expanded(

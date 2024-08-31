@@ -1,31 +1,63 @@
 import 'package:flutter/material.dart';
 
-class RoundButton extends StatelessWidget {
+class RoundButton extends StatefulWidget {
   final IconData icon;
+  final Color backgroundColor;
+  final Color borderColor;
   final VoidCallback onPressed;
 
   const RoundButton({
     super.key,
     required this.icon,
+    required this.backgroundColor,
+    required this.borderColor,
     required this.onPressed,
   });
 
   @override
+  _RoundButtonState createState() => _RoundButtonState();
+}
+
+class _RoundButtonState extends State<RoundButton> {
+  bool _isPressed = false;
+
+  void _handleTapDown(TapDownDetails details) {
+    setState(() {
+      _isPressed = true;
+    });
+  }
+
+  void _handleTapUp(TapUpDetails details) {
+    setState(() {
+      _isPressed = false;
+    });
+  }
+
+  void _handleTapCancel() {
+    setState(() {
+      _isPressed = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onPressed,
+      onTapDown: _handleTapDown,
+      onTapUp: _handleTapUp,
+      onTapCancel: _handleTapCancel,
+      onTap: widget.onPressed,
       child: Container(
         width: 60,
         height: 60,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: _isPressed ? Colors.grey[300] : widget.backgroundColor,
           shape: BoxShape.circle,
-          border: Border.all(color: const Color(0xFF3D5936), width: 2),
+          border: Border.all(color: widget.borderColor, width: 2),
         ),
         child: Center(
           child: Icon(
-            icon,
-            color: const Color(0xFF3D5936),
+            widget.icon,
+            color: widget.borderColor,
             size: 30,
           ),
         ),
