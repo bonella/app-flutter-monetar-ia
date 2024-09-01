@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:monetar_ia/components/headers/header_first_steps.dart';
 import 'package:monetar_ia/components/cards/card_first_steps.dart';
-import 'package:monetar_ia/views/home_page.dart'; // Certifique-se de importar a HomePage
+import 'package:monetar_ia/components/buttons/btn_outline_green.dart';
+import 'package:monetar_ia/components/footers/footer.dart';
+import 'package:monetar_ia/views/home_page.dart';
 
 class FirstStepsPage2 extends StatelessWidget {
   const FirstStepsPage2({super.key});
@@ -8,74 +11,64 @@ class FirstStepsPage2 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF738C61),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: constraints.maxHeight,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 0.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    const SizedBox(height: 30),
-                    Container(
-                      alignment: Alignment.center,
-                      child: const Text(
-                        'Monetar.ia',
-                        style: TextStyle(
-                          fontFamily: 'Kumbh Sans',
-                          fontWeight: FontWeight.w400,
-                          fontSize: 48,
-                          color: Color(0xFFE1E7E0),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Container(
-                      alignment: Alignment.center,
-                      child: const Text(
-                        'Qual sua situação financeira atual?',
-                        style: TextStyle(
-                          fontFamily: 'Kumbh Sans',
-                          fontWeight: FontWeight.w400,
-                          fontSize: 22,
-                          height: 27.29 / 22,
-                          color: Color(0xFFFFFFFF),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    CardFirstSteps(
-                      title: 'Qual sua situação financeira atual?',
-                      buttonLabels: const [
-                        'Tenho dívidas',
-                        'Gostaria de economizar mais',
-                        'Gostaria de bater metas financeiras',
-                        'Não sei para onde meu dinheiro vai',
-                      ],
-                      onNextPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const HomePage(),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                  ],
+      body: Stack(
+        children: [
+          Container(
+            color: Colors.white,
+            child: Column(
+              children: <Widget>[
+                const HeaderFirstSteps(
+                  title: 'Monetar.ia',
+                  subtitle: 'Primeiros Passos',
                 ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        const SizedBox(height: 20),
+                        CardFirstSteps(
+                          title: 'Quais seus objetivos com a Monetar.ia?',
+                          buttonLabels: const [
+                            'Tenho dívidas',
+                            'Gostaria de economizar mais',
+                            'Gostaria de bater metas financeiras',
+                            'Não sei para onde meu dinheiro vai',
+                          ],
+                          onButtonPressed: (label) {
+                            // Adicione a ação desejada ao clicar em um dos botões
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                ),
+                const Footer(
+                  backgroundColor: Color(0xFF738C61),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            bottom: 30,
+            left: MediaQuery.of(context).size.width / 2 - 130,
+            child: SizedBox(
+              width: 260,
+              child: BtnOutlineGreen(
+                text: 'Próximo',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const HomePage(),
+                    ),
+                  );
+                },
               ),
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }

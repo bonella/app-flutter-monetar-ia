@@ -14,7 +14,6 @@ class GoalPage extends StatelessWidget {
       body: Stack(
         children: [
           Container(
-            color: const Color(0xFF003566),
             child: Column(
               children: [
                 Expanded(
@@ -22,7 +21,7 @@ class GoalPage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        CustomCard(
+                        WhiteCard(
                           child: Column(
                             children: [
                               HeaderAdd(
@@ -76,7 +75,7 @@ class GoalPage extends StatelessWidget {
                                       borderColor: Color(0xFF003566),
                                       badgeColor: Color(0xFF003566),
                                     ),
-                                    SizedBox(height: 100),
+                                    SizedBox(height: 16),
                                   ],
                                 ),
                               ),
@@ -94,12 +93,13 @@ class GoalPage extends StatelessWidget {
             ),
           ),
           Positioned(
-            bottom: 55,
+            bottom: 30,
             left: MediaQuery.of(context).size.width / 2 - 30,
             child: RoundButton(
               icon: Icons.star,
               backgroundColor: Colors.white,
               borderColor: const Color(0xFF003566),
+              iconColor: const Color(0xFF003566),
               onPressed: () {},
             ),
           ),

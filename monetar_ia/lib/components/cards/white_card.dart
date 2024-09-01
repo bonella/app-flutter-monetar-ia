@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-class CustomCard extends StatelessWidget {
+class WhiteCard extends StatelessWidget {
   final Widget child;
 
-  const CustomCard({
+  const WhiteCard({
     super.key,
     required this.child,
   });
@@ -12,13 +12,16 @@ class CustomCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return ConstrainedBox(
       constraints: const BoxConstraints(
-        minHeight: 723,
-      ),
+          // minHeight: 723,
+          ),
       child: Container(
         width: double.infinity,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(20),
+            bottomRight: Radius.circular(20),
+          ),
         ),
         child: child,
       ),

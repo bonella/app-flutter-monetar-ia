@@ -27,101 +27,104 @@ class HeaderAdd extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
-      height: 180,
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(20),
-          bottomRight: Radius.circular(20),
+      color: Colors.white,
+      child: Container(
+        width: double.infinity,
+        height: 180,
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(20),
+            bottomRight: Radius.circular(20),
+          ),
         ),
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 36.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(
-                    Icons.arrow_back_ios,
-                    color: Colors.white,
-                    size: 24,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 36.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.arrow_back_ios,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                    onPressed: onPrevMonth,
                   ),
-                  onPressed: onPrevMonth,
-                ),
-                const SizedBox(width: 20),
-                Text(
-                  month,
-                  style: const TextStyle(
-                    fontFamily: 'Kumbh Sans',
-                    fontWeight: FontWeight.w400,
-                    fontSize: 22,
-                    color: Color(0xFFFFFFFF),
+                  const SizedBox(width: 20),
+                  Text(
+                    month,
+                    style: const TextStyle(
+                      fontFamily: 'Kumbh Sans',
+                      fontWeight: FontWeight.w400,
+                      fontSize: 22,
+                      color: Color(0xFFFFFFFF),
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(width: 20),
-                IconButton(
-                  icon: const Icon(
-                    Icons.arrow_forward_ios,
-                    color: Colors.white,
-                    size: 24,
+                  const SizedBox(width: 20),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.arrow_forward_ios,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                    onPressed: onNextMonth,
                   ),
-                  onPressed: onNextMonth,
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: circleBackgroundColor,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                      child: Center(
-                        child: IconButton(
-                          icon: Icon(
-                            circleIcon,
-                            color: circleIconColor,
-                            size: 20,
+            Padding(
+              padding: const EdgeInsets.only(top: 16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: circleBackgroundColor,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: Center(
+                          child: IconButton(
+                            icon: Icon(
+                              circleIcon,
+                              color: circleIconColor,
+                              size: 20,
+                            ),
+                            onPressed: () {},
+                            padding: EdgeInsets.zero,
                           ),
-                          onPressed: () {},
-                          padding: EdgeInsets.zero,
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          label,
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        Text(
-                          value,
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 14),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            label,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          Text(
+                            value,
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

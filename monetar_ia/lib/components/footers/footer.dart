@@ -10,15 +10,29 @@ class Footer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 80,
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
+    return Stack(
+      alignment: Alignment.topCenter,
+      children: [
+        Container(
+          height: 80,
+          decoration: BoxDecoration(
+            color: backgroundColor,
+          ),
         ),
-      ),
+        Positioned(
+          child: Container(
+            height: 20,
+            width: MediaQuery.of(context).size.width,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(20),
+                bottomRight: Radius.circular(20),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

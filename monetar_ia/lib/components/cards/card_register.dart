@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:monetar_ia/components/buttons/btn_outline_green.dart';
 
 class CardRegister extends StatelessWidget {
   const CardRegister({super.key});
@@ -16,46 +15,24 @@ class CardRegister extends StatelessWidget {
         clipBehavior: Clip.none,
         children: <Widget>[
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding:
+                const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 _buildLabel('Nome:', context),
                 _buildInput(context),
-                const SizedBox(height: 10),
                 _buildLabel('Sobrenome:', context),
                 _buildInput(context),
-                const SizedBox(height: 10),
                 _buildLabel('CPF:', context),
                 _buildInput(context),
-                const SizedBox(height: 10),
                 _buildLabel('Salário:', context),
                 _buildInput(context),
-                const SizedBox(height: 10),
                 _buildLabel('E-mail:', context),
                 _buildInput(context),
-                const SizedBox(height: 10),
                 _buildLabel('Senha:', context),
                 _buildInput(context),
-                const SizedBox(height: 40),
               ],
-            ),
-          ),
-          Positioned(
-            bottom: -25,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 260),
-                child: BtnOutlineGreen(
-                  onPressed: () {
-                    // Ação ao pressionar o botão
-                    print("Botão de cadastrar pressionado");
-                  },
-                  text: 'Cadastrar',
-                ),
-              ),
             ),
           ),
         ],
@@ -64,25 +41,21 @@ class CardRegister extends StatelessWidget {
   }
 
   Widget _buildLabel(String text, BuildContext context) {
-    return SizedBox(
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontFamily: 'Kumbh Sans',
-          fontWeight: FontWeight.w400,
-          fontSize: 18,
-          color: Color(0xFF3D5936),
-        ),
-        textAlign: TextAlign.left,
+    return Text(
+      text,
+      style: const TextStyle(
+        fontFamily: 'Kumbh Sans',
+        fontWeight: FontWeight.w400,
+        fontSize: 18,
+        color: Color(0xFF3D5936),
       ),
+      textAlign: TextAlign.left,
     );
   }
 
-  Widget _buildInput(BuildContext context, {bool hasBottomMargin = false}) {
+  Widget _buildInput(BuildContext context) {
     return Container(
-      margin: hasBottomMargin
-          ? const EdgeInsets.only(bottom: 1.0)
-          : EdgeInsets.zero,
+      margin: const EdgeInsets.only(bottom: 8),
       child: TextField(
         decoration: InputDecoration(
           border: OutlineInputBorder(

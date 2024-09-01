@@ -4,6 +4,7 @@ class RoundButton extends StatefulWidget {
   final IconData icon;
   final Color backgroundColor;
   final Color borderColor;
+  final Color iconColor;
   final VoidCallback onPressed;
 
   const RoundButton({
@@ -11,6 +12,7 @@ class RoundButton extends StatefulWidget {
     required this.icon,
     required this.backgroundColor,
     required this.borderColor,
+    required this.iconColor,
     required this.onPressed,
   });
 
@@ -57,7 +59,7 @@ class _RoundButtonState extends State<RoundButton> {
         child: Center(
           child: Icon(
             widget.icon,
-            color: widget.borderColor,
+            color: widget.iconColor,
             size: 30,
           ),
         ),

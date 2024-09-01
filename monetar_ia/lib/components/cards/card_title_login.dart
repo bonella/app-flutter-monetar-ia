@@ -18,8 +18,7 @@ class CardTitleLogin extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            width: 304,
-            height: 94,
+            width: double.infinity,
             margin: const EdgeInsets.only(top: 35, bottom: 20),
             child: const Center(
               child: Text(
