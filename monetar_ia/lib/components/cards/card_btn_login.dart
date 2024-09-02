@@ -29,32 +29,36 @@ class CardBtnLogin extends StatelessWidget {
                 fontFamily: 'Kantumruy',
                 fontWeight: FontWeight.w400,
                 fontSize: 24,
-                height: 43.36 / 24,
                 color: Color(0xFFFFFFFF),
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 8),
             const Text(
               'Nosso aplicativo é o seu parceiro ideal para alcançar metas e organizar suas finanças com eficiência. Transforme sua relação com o dinheiro e atinja seus objetivos com facilidade!',
               style: TextStyle(
                 fontFamily: 'Kumbh Sans',
                 fontWeight: FontWeight.w400,
                 fontSize: 16,
-                height: 19.84 / 16,
                 color: Color(0xFFFFFFFF),
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 16),
             const Center(
-              child: Icon(
-                Icons.arrow_downward,
-                color: Colors.white,
-                size: 60.0,
+              child: _GlowingIcon(),
+            ),
+            const SizedBox(height: 8),
+            const Center(
+              child: Text(
+                'Arraste pra Baixo',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18.0,
+                ),
               ),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 250),
             const Text(
               'Monetar.ia',
               style: TextStyle(
@@ -144,6 +148,65 @@ class CardBtnLogin extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _GlowingIcon extends StatefulWidget {
+  const _GlowingIcon({super.key});
+
+  @override
+  __GlowingIconState createState() => __GlowingIconState();
+}
+
+class __GlowingIconState extends State<_GlowingIcon>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _animation = Tween(begin: 0.0, end: 8.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.white.withOpacity(0.7),
+                blurRadius: _animation.value,
+                spreadRadius: _animation.value,
+              ),
+            ],
+          ),
+          child: child,
+        );
+      },
+      child: const Icon(
+        Icons.arrow_downward,
+        color: Color(0xFF738C61),
+        size: 60.0,
       ),
     );
   }

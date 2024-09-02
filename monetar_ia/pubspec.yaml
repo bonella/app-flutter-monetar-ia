@@ -14,6 +14,8 @@ dependencies:
   fl_chart: ^0.50.1
   speech_to_text: ^6.1.1
   google_generative_ai: ^0.4.5
+  googleapis: ^13.1.0
+  googleapis_auth: ^1.5.1
 
 dev_dependencies:
   flutter_test:

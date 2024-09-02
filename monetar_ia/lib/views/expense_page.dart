@@ -16,70 +16,66 @@ class ExpensePage extends StatelessWidget {
         children: [
           Column(
             children: [
-              Expanded(
+              HeaderAdd(
+                month: 'Agosto',
+                onPrevMonth: () {},
+                onNextMonth: () {},
+                backgroundColor: const Color(0xFF8C1C03),
+                circleIcon: Icons.keyboard_arrow_down,
+                circleIconColor: Colors.white,
+                circleBackgroundColor: const Color(0xFF8C1C03),
+                label: 'Despesas',
+                value: 'R\$ 8.000,00',
+              ),
+              const Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       WhiteCard(
-                        child: Column(
-                          children: [
-                            HeaderAdd(
-                              month: 'Agosto',
-                              onPrevMonth: () {},
-                              onNextMonth: () {},
-                              backgroundColor: const Color(0xFF8C1C03),
-                              circleIcon: Icons.keyboard_arrow_down,
-                              circleIconColor: Colors.white,
-                              circleBackgroundColor: const Color(0xFF8C1C03),
-                              label: 'Despesas',
-                              value: 'R\$ 8.000,00',
-                            ),
-                            const SizedBox(height: 16),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 16.0),
-                              child: Column(
-                                children: [
-                                  InfoBox(
-                                    title: 'Total Mês de Agosto',
-                                    description: 'R\$ 8.000,00',
-                                    showBadge: true,
-                                    percentage: '+5%',
-                                    borderColor: Color(0xFF8C1C03),
-                                    badgeColor: Color(0xFF8C1C03),
-                                  ),
-                                  SizedBox(height: 16),
-                                  InfoBox(
-                                    title: 'Aluguel',
-                                    description: 'R\$ 2.000,00',
-                                    showBadge: true,
-                                    percentage: '-3%',
-                                    borderColor: Color(0xFF8C1C03),
-                                    badgeColor: Color(0xFF8C1C03),
-                                  ),
-                                  SizedBox(height: 16),
-                                  InfoBox(
-                                    title: 'Mercado',
-                                    description: 'R\$ 2.000,00',
-                                    showBadge: true,
-                                    percentage: '-3%',
-                                    borderColor: Color(0xFF8C1C03),
-                                    badgeColor: Color(0xFF8C1C03),
-                                  ),
-                                  SizedBox(height: 16),
-                                  InfoBox(
-                                    title: 'Gasolina',
-                                    description: 'R\$ 800,00',
-                                    showBadge: true,
-                                    percentage: '0,2%',
-                                    borderColor: Color(0xFF8C1C03),
-                                    badgeColor: Color(0xFF8C1C03),
-                                  ),
-                                  SizedBox(height: 16),
-                                ],
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Column(
+                            children: [
+                              SizedBox(height: 16),
+                              InfoBox(
+                                title: 'Total Mês de Agosto',
+                                description: 'R\$ 8.000,00',
+                                showBadge: true,
+                                percentage: '+5%',
+                                borderColor: Color(0xFF8C1C03),
+                                badgeColor: Color(0xFF8C1C03),
                               ),
-                            ),
-                          ],
+                              SizedBox(height: 16),
+                              InfoBox(
+                                title: 'Aluguel',
+                                description: 'R\$ 2.000,00',
+                                showBadge: true,
+                                percentage: '-3%',
+                                borderColor: Color(0xFF8C1C03),
+                                badgeColor: Color(0xFF8C1C03),
+                              ),
+                              SizedBox(height: 16),
+                              InfoBox(
+                                title: 'Mercado',
+                                description: 'R\$ 2.000,00',
+                                showBadge: true,
+                                percentage: '-3%',
+                                borderColor: Color(0xFF8C1C03),
+                                badgeColor: Color(0xFF8C1C03),
+                              ),
+                              SizedBox(height: 16),
+                              InfoBox(
+                                title: 'Gasolina',
+                                description: 'R\$ 800,00',
+                                showBadge: true,
+                                percentage: '0,2%',
+                                borderColor: Color(0xFF8C1C03),
+                                badgeColor: Color(0xFF8C1C03),
+                              ),
+                              SizedBox(height: 16),
+                            ],
+                          ),
                         ),
                       ),
                     ],

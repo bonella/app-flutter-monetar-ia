@@ -19,7 +19,7 @@ class CardTitleLogin extends StatelessWidget {
         children: [
           Container(
             width: double.infinity,
-            margin: const EdgeInsets.only(top: 35, bottom: 20),
+            margin: const EdgeInsets.only(top: 40, bottom: 20),
             child: const Center(
               child: Text(
                 'Monetar.ia',
@@ -28,7 +28,6 @@ class CardTitleLogin extends StatelessWidget {
                   fontFamily: 'Kumbh Sans',
                   fontWeight: FontWeight.w400,
                   fontSize: 50,
-                  height: 71.93 / 58,
                 ),
                 textAlign: TextAlign.center,
               ),

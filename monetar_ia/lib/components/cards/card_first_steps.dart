@@ -27,7 +27,7 @@ class CardFirstSteps extends StatelessWidget {
         children: <Widget>[
           Padding(
             padding: const EdgeInsets.only(
-                top: 0, left: 16.0, right: 16.0, bottom: 0.0),
+                top: 8, left: 16.0, right: 16.0, bottom: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
@@ -50,7 +50,8 @@ class CardFirstSteps extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       foregroundColor: const Color(0xFF3D5936),
                       backgroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 10.0),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0, vertical: 16.0),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(100),
                         side: const BorderSide(color: Color(0xFF3D5936)),

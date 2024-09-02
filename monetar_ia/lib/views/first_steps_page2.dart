@@ -28,7 +28,7 @@ class FirstStepsPage2 extends StatelessWidget {
                       children: <Widget>[
                         const SizedBox(height: 20),
                         CardFirstSteps(
-                          title: 'Quais seus objetivos com a Monetar.ia?',
+                          title: 'Qual sua situação financeira atual?',
                           buttonLabels: const [
                             'Tenho dívidas',
                             'Gostaria de economizar mais',

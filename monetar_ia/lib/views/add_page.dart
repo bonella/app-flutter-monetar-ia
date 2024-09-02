@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:monetar_ia/components/headers/header_first_steps.dart';
-import 'package:monetar_ia/components/cards/card_add.dart'; // Importe o CardAdd
+import 'package:monetar_ia/components/cards/card_add.dart';
 import 'package:monetar_ia/components/footers/footer.dart';
 import 'package:monetar_ia/components/buttons/round_btn.dart';
 

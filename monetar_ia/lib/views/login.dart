@@ -15,17 +15,12 @@ class LoginPage extends StatelessWidget {
       DeviceOrientation.portraitDown,
     ]);
 
-    return Scaffold(
-      body: Stack(
+    return const Scaffold(
+      body: Column(
         children: <Widget>[
-          // Cabeçalho fixo
-          const HeaderLogin(),
-          Positioned(
-            top: screenHeight * 0.4,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: const SingleChildScrollView(
+          HeaderLogin(),
+          Expanded(
+            child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[

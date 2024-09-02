@@ -34,7 +34,7 @@ class FirstStepsPage extends StatelessWidget {
                             'Descobrir o que mais me prejudica',
                             'Ter previsões sobre meus gastos',
                             'Criar planejamento financeiro',
-                            'Centralizar meus gastos em um só local',
+                            'Centralizar meus gastos',
                             'Descobrir padrões de gastos',
                           ],
                           onButtonPressed: (label) {
