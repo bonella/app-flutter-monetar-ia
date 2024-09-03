@@ -27,7 +27,7 @@ class CardFirstSteps extends StatelessWidget {
         children: <Widget>[
           Padding(
             padding: const EdgeInsets.only(
-                top: 16.0, left: 16.0, right: 16.0, bottom: 40.0),
+                top: 8, left: 16.0, right: 16.0, bottom: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
@@ -37,7 +37,7 @@ class CardFirstSteps extends StatelessWidget {
                     style: const TextStyle(
                       fontFamily: 'Kumbh Sans',
                       fontWeight: FontWeight.w400,
-                      fontSize: 18,
+                      fontSize: 20,
                       color: Color(0xFF3D5936),
                     ),
                     textAlign: TextAlign.center,
@@ -50,54 +50,21 @@ class CardFirstSteps extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       foregroundColor: const Color(0xFF3D5936),
                       backgroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0, vertical: 16.0),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(100),
                         side: const BorderSide(color: Color(0xFF3D5936)),
                       ),
                     ),
-                    child: Text(label),
+                    child: Text(
+                      label,
+                      style: const TextStyle(fontSize: 16),
+                    ),
                   ),
                   const SizedBox(height: 10),
                 ],
               ],
-            ),
-          ),
-          Positioned(
-            bottom: -25,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                width: 260,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(100),
-                  border: Border.all(
-                    color: const Color(0xFF738C61),
-                    width: 2,
-                  ),
-                ),
-                child: TextButton(
-                  onPressed: onNextPressed,
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.all(2),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'Próximo',
-                      style: TextStyle(
-                        color: Color(0xFF738C61),
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
             ),
           ),
         ],
