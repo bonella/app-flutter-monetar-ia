@@ -26,12 +26,9 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - lib/assets/efigie.png
-    - lib/assets/icon.png
+    - lib/assets/logo.png
 
 flutter_icons:
   android: true
   ios: true
   image_path: "lib/assets/icon.png"
-  # adaptive_icon_background: "#ffffff"
-  # adaptive_icon_foreground: "- lib/assets/icon.png"

@@ -4,7 +4,7 @@ import 'package:monetar_ia/components/cards/white_card.dart';
 import 'package:monetar_ia/components/boxes/info_box.dart';
 import 'package:monetar_ia/components/footers/footer.dart';
 import 'package:monetar_ia/components/buttons/round_btn.dart';
-import 'package:monetar_ia/views/expense_page.dart';
+import 'package:monetar_ia/views/add_page.dart';
 
 class RevenuePage extends StatelessWidget {
   const RevenuePage({super.key});
@@ -102,7 +102,7 @@ class RevenuePage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const ExpensePage(),
+                    builder: (context) => const AddPage(),
                   ),
                 );
               },
