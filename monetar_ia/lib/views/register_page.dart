@@ -38,7 +38,6 @@ class _RegisterPageState extends State<RegisterPage> {
           confirmPassword: confirmPassword,
         );
         if (response.statusCode == 200) {
-          // Registro bem-sucedido
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Cadastro realizado com sucesso!')),
           );
@@ -72,7 +71,8 @@ class _RegisterPageState extends State<RegisterPage> {
                 Expanded(
                   child: SingleChildScrollView(
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.only(
+                          top: 0, left: 16, right: 16, bottom: 16),
                       child: Form(
                         key: _formKey,
                         child: Column(

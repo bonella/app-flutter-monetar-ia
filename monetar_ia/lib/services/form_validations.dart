@@ -17,13 +17,18 @@ String? validateName(String? value) {
   return null;
 }
 
-String? validateSurname(String? value) {
+String? validateLastName(String? value) {
   final regex = RegExp(r"^[a-zA-Z\s]{3,256}$");
+  final specialCharRegex = RegExp(r'[^\w\s]');
+
   if (value == null || value.isEmpty) {
     return 'Sobrenome é obrigatório';
   }
+  if (specialCharRegex.hasMatch(value)) {
+    return 'Sobrenome não pode conter caractere especial';
+  }
   if (!regex.hasMatch(value)) {
-    return 'Sobrenome deve ter entre 3 e 256 letras e espaços';
+    return 'Sobrenome deve ter pelo menos 3 letras';
   }
   return null;
 }
@@ -45,7 +50,7 @@ String? validatePassword(String? value) {
     return 'Senha é obrigatória';
   }
   if (!regex.hasMatch(value)) {
-    return 'Senha deve ter entre 8 e 12 caracteres e pode incluir letras, números e caracteres especiais';
+    return 'Senha deve ter entre 8 e 12 caracteres';
   }
   return null;
 }
