@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:monetar_ia/components/headers/header_home.dart';
 import 'package:monetar_ia/components/boxes/info_box.dart';
 import 'package:monetar_ia/components/graphics/line_graphic.dart';
-import 'package:monetar_ia/views/add_page.dart';
+import 'package:monetar_ia/views/expense_page.dart';
+import 'package:monetar_ia/views/goal_page.dart';
+import 'package:monetar_ia/views/profile_page.dart';
 import 'package:monetar_ia/views/revenue_page.dart';
 import 'package:monetar_ia/views/voice_page.dart';
 import 'package:monetar_ia/components/buttons/round_btn.dart';
@@ -62,7 +64,7 @@ class HomePage extends StatelessWidget {
                                 padding: EdgeInsets.symmetric(horizontal: 16.0),
                                 child: SizedBox(
                                   height: 300,
-                                  child: LineGraphic(title: 'Gastos por mês'),
+                                  child: LineGraphic(title: 'Últimas compras'),
                                 ),
                               ),
                               SizedBox(height: 16),
@@ -87,20 +89,6 @@ class HomePage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 RoundButton(
-                  icon: Icons.add,
-                  backgroundColor: Colors.white,
-                  borderColor: const Color(0xFF3D5936),
-                  iconColor: const Color(0xFF3D5936),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AddPage(),
-                      ),
-                    );
-                  },
-                ),
-                RoundButton(
                   icon: Icons.mic,
                   backgroundColor: Colors.white,
                   borderColor: const Color(0xFF3D5936),
@@ -114,12 +102,19 @@ class HomePage extends StatelessWidget {
                     );
                   },
                 ),
-                RoundButton(
-                  icon: Icons.person,
-                  backgroundColor: Colors.white,
-                  borderColor: const Color(0xFF3D5936),
-                  iconColor: const Color(0xFF3D5936),
-                  onPressed: () {
+              ],
+            ),
+          ),
+          Positioned(
+            height: 50,
+            bottom: 5,
+            left: 16,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                GestureDetector(
+                  onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -127,6 +122,109 @@ class HomePage extends StatelessWidget {
                       ),
                     );
                   },
+                  child: const Column(
+                    children: [
+                      Icon(
+                        Icons.attach_money_outlined,
+                        size: 30.0,
+                      ),
+                      SizedBox(height: 1),
+                      Text(
+                        'Receitas',
+                        style: TextStyle(
+                          fontSize: 10.0,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 32),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ExpensePage(),
+                      ),
+                    );
+                  },
+                  child: const Column(
+                    children: [
+                      Icon(
+                        Icons.money_off,
+                        size: 30.0,
+                      ),
+                      SizedBox(height: 1),
+                      Text(
+                        'Despesas',
+                        style: TextStyle(
+                          fontSize: 10.0,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            height: 50,
+            bottom: 5,
+            right: 16,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const GoalPage(),
+                      ),
+                    );
+                  },
+                  child: const Column(
+                    children: [
+                      Icon(
+                        Icons.star,
+                        size: 30.0,
+                      ),
+                      SizedBox(height: 1),
+                      Text(
+                        'Metas',
+                        style: TextStyle(
+                          fontSize: 10.0,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 32),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProfilePage(),
+                      ),
+                    );
+                  },
+                  child: const Column(
+                    children: [
+                      Icon(
+                        Icons.person,
+                        size: 30.0,
+                      ),
+                      SizedBox(height: 1),
+                      Text(
+                        'Perfil  ',
+                        style: TextStyle(
+                          fontSize: 10.0,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

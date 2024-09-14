@@ -21,7 +21,6 @@ class HeaderHome extends StatelessWidget {
       child: Stack(
         children: [
           Container(
-            width: 430,
             height: 180,
             decoration: const BoxDecoration(
               color: Color(0xFF738C61),

@@ -40,10 +40,10 @@ class LineGraphic extends StatelessWidget {
           Row(
             children: [
               _buildLegendCircle(
-                  color: const Color(0xFF3D5936), text: 'Ano Atual'),
+                  color: const Color(0xFF3D5936), text: 'Receitas'),
               const SizedBox(width: 16),
               _buildLegendCircle(
-                  color: const Color(0xFF8C1C03), text: 'Ano Passado'),
+                  color: const Color(0xFF8C1C03), text: 'Despesas'),
             ],
           ),
           const SizedBox(height: 16),
@@ -76,29 +76,29 @@ class LineGraphic extends StatelessWidget {
                         );
                         switch (value.toInt()) {
                           case 0:
-                            return const Text('Jan', style: style);
+                            return const Text('18/08', style: style);
                           case 1:
-                            return const Text('Fev', style: style);
+                            return const Text('19/08', style: style);
                           case 2:
-                            return const Text('Mar', style: style);
+                            return const Text('19/08', style: style);
                           case 3:
-                            return const Text('Abr', style: style);
+                            return const Text('20/08', style: style);
                           case 4:
                             return const Text('Mai', style: style);
                           case 5:
-                            return const Text('Jun', style: style);
+                            return const Text('21/08', style: style);
                           case 6:
-                            return const Text('Jul', style: style);
+                            return const Text('21/08', style: style);
                           case 7:
-                            return const Text('Ago', style: style);
+                            return const Text('21/08', style: style);
                           case 8:
-                            return const Text('Set', style: style);
+                            return const Text('21/08', style: style);
                           case 9:
-                            return const Text('Out', style: style);
+                            return const Text('21/08', style: style);
                           case 10:
-                            return const Text('Nov', style: style);
+                            return const Text('21/08', style: style);
                           case 11:
-                            return const Text('Dez', style: style);
+                            return const Text('21/08', style: style);
                         }
                         return const Text('');
                       },
@@ -142,7 +142,6 @@ class LineGraphic extends StatelessWidget {
                       const FlSpot(8, 400),
                       const FlSpot(9, 800),
                       const FlSpot(10, 200),
-                      const FlSpot(11, 700),
                     ],
                     isCurved: true,
                     color: const Color(0xFF3D5936),
@@ -163,7 +162,6 @@ class LineGraphic extends StatelessWidget {
                       const FlSpot(8, 600),
                       const FlSpot(9, 900),
                       const FlSpot(10, 700),
-                      const FlSpot(11, 1000),
                     ],
                     isCurved: true,
                     color: const Color(0xFF8C1C03),

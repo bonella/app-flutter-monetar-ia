@@ -4,6 +4,7 @@ import 'package:monetar_ia/components/cards/white_card.dart';
 import 'package:monetar_ia/components/boxes/info_box.dart';
 import 'package:monetar_ia/components/footers/footer.dart';
 import 'package:monetar_ia/components/buttons/round_btn.dart';
+import 'package:monetar_ia/views/add_page.dart';
 
 class GoalPage extends StatelessWidget {
   const GoalPage({super.key});
@@ -93,12 +94,17 @@ class GoalPage extends StatelessWidget {
             bottom: 30,
             left: MediaQuery.of(context).size.width / 2 - 30,
             child: RoundButton(
-              icon: Icons.star,
+              icon: Icons.add,
               backgroundColor: Colors.white,
               borderColor: const Color(0xFF003566),
               iconColor: const Color(0xFF003566),
               onPressed: () {
-                // Adicione a ação para o botão aqui
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AddPage(),
+                  ),
+                );
               },
             ),
           ),
