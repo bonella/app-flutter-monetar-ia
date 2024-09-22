@@ -15,11 +15,10 @@ class VoicePage extends StatefulWidget {
 
 class _VoicePageState extends State<VoicePage> {
   bool listening = false;
-  String text = '';
   final SpeechToText _speechToText = SpeechToText();
   TextEditingController message = TextEditingController();
-
   List<String> historic = [];
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -31,7 +30,7 @@ class _VoicePageState extends State<VoicePage> {
     bool available = await _speechToText.initialize();
     if (!available) {
       setState(() {
-        text = 'Microfone não disponível';
+        historic.add('Microfone não disponível');
       });
     }
   }
@@ -42,11 +41,34 @@ class _VoicePageState extends State<VoicePage> {
         apiKey: 'AIzaSyDVtWjFoY9bBwKB4uUkhWMg2AT2-Y7aW5U');
     var content = [Content.text(text)];
     var response = await model.generateContent(content);
-    setState(() {
-      if (response.text != null) {
-        historic.add(response.text!);
-      }
-    });
+
+    if (response.text != null) {
+      historic.add(response.text!);
+      _scrollToBottom();
+      await _typeResponse(response.text!);
+    }
+  }
+
+  Future<void> _typeResponse(String response) async {
+    String displayedText = '';
+    for (int i = 0; i < response.length; i++) {
+      displayedText += response[i];
+      setState(() {
+        historic[historic.length - 1] = displayedText;
+      });
+      _scrollToBottom();
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+  }
+
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   @override
@@ -58,7 +80,7 @@ class _VoicePageState extends State<VoicePage> {
             children: [
               const HeaderFirstSteps(
                 title: 'Monetar.ia',
-                subtitle: 'Página de Voz',
+                subtitle: 'Assistente Monetar.ia',
                 backgroundColor: Color(0xFF697077),
               ),
               Expanded(
@@ -69,6 +91,7 @@ class _VoicePageState extends State<VoicePage> {
                       Expanded(
                         flex: 20,
                         child: ListView.builder(
+                          controller: _scrollController,
                           itemCount: historic.length,
                           itemBuilder: (context, index) {
                             return Align(
@@ -109,15 +132,20 @@ class _VoicePageState extends State<VoicePage> {
                                 Expanded(
                                   child: TextField(
                                     controller: message,
+                                    textCapitalization: TextCapitalization
+                                        .sentences, // Capitalização
                                     decoration: InputDecoration(
                                         border: const OutlineInputBorder(),
                                         suffixIcon: IconButton(
                                           onPressed: () {
-                                            setState(() {
-                                              historic.add(message.text);
-                                            });
-                                            sendMessage(message.text);
-                                            message.clear();
+                                            if (message.text.isNotEmpty) {
+                                              setState(() {
+                                                historic.add(message.text);
+                                              });
+                                              sendMessage(message.text);
+                                              message.clear();
+                                              _scrollToBottom();
+                                            }
                                           },
                                           icon: const Icon(Icons.send),
                                           splashRadius: 1,
@@ -158,11 +186,11 @@ class _VoicePageState extends State<VoicePage> {
                     listenFor: const Duration(seconds: 15),
                     onResult: (result) {
                       setState(() {
-                        text = result.recognizedWords;
                         if (result.finalResult) {
                           listening = false;
-                          historic.add(text);
-                          sendMessage(text);
+                          historic.add(result.recognizedWords);
+                          sendMessage(result.recognizedWords);
+                          _scrollToBottom();
                         }
                       });
                     },

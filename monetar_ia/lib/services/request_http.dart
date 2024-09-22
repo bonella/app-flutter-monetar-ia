@@ -40,7 +40,7 @@ class RequestHttp {
     if (response.statusCode == 200) {
       return response;
     } else {
-      throw Exception('Erro: ${response.statusCode} - ${response.body}');
+      return response;
     }
   }
 }

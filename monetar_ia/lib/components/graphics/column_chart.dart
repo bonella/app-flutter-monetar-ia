@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
-class LineGraphic extends StatelessWidget {
+class ColumnChart extends StatelessWidget {
   final String title;
 
-  const LineGraphic({
+  const ColumnChart({
     super.key,
     required this.title,
   });
@@ -46,48 +46,36 @@ class LineGraphic extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Expanded(
-            child: LineChart(
-              LineChartData(
-                gridData: FlGridData(
-                  show: true,
-                  drawHorizontalLine: true,
-                  drawVerticalLine: false,
-                  horizontalInterval: 100,
-                  getDrawingHorizontalLine: (value) {
-                    return FlLine(
-                      color: const Color(0xFF3D5936).withOpacity(0.1),
-                      strokeWidth: 1,
-                    );
-                  },
-                ),
+            child: BarChart(
+              BarChartData(
+                gridData: FlGridData(show: false),
                 titlesData: FlTitlesData(
-                  show: true,
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 40,
                       getTitlesWidget: (value, meta) {
-                        const style = TextStyle(
-                          color: Color(0xFF697077),
-                          fontWeight: FontWeight.w400,
-                          fontSize: 10,
-                        );
                         final titles = [
-                          '18/08',
-                          '19/08',
-                          '20/08',
-                          '21/08',
-                          '22/08',
-                          '23/08',
-                          '24/08',
-                          '25/08',
-                          '26/08',
-                          '27/08',
-                          '28/08'
+                          'Jan',
+                          'Feb',
+                          'Mar',
+                          'Apr',
+                          'May',
+                          'Jun',
+                          'Jul',
+                          'Aug',
+                          'Sep',
+                          'Oct',
+                          'Nov',
+                          'Dec'
                         ];
                         return Text(
                           titles[value.toInt()],
-                          style: style,
+                          style: const TextStyle(
+                            color: Color(0xFF697077),
+                            fontWeight: FontWeight.w400,
+                            fontSize: 10,
+                          ),
                         );
                       },
                     ),
@@ -96,7 +84,7 @@ class LineGraphic extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 40,
-                      interval: 100,
+                      interval: 200,
                       getTitlesWidget: (value, meta) {
                         return Text(
                           value.toInt().toString(),
@@ -117,47 +105,19 @@ class LineGraphic extends StatelessWidget {
                     width: 1,
                   ),
                 ),
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: [
-                      const FlSpot(0, 200),
-                      const FlSpot(1, 500),
-                      const FlSpot(2, 800),
-                      const FlSpot(3, 300),
-                      const FlSpot(4, 700),
-                      const FlSpot(5, 1000),
-                      const FlSpot(6, 600),
-                      const FlSpot(7, 900),
-                      const FlSpot(8, 400),
-                      const FlSpot(9, 800),
-                      const FlSpot(10, 200),
-                    ],
-                    isCurved: true,
-                    color: const Color(0xFF3D5936),
-                    barWidth: 2,
-                    dotData: FlDotData(show: false),
-                    belowBarData: BarAreaData(show: false),
-                  ),
-                  LineChartBarData(
-                    spots: [
-                      const FlSpot(0, 300),
-                      const FlSpot(1, 400),
-                      const FlSpot(2, 500),
-                      const FlSpot(3, 600),
-                      const FlSpot(4, 700),
-                      const FlSpot(5, 800),
-                      const FlSpot(6, 400),
-                      const FlSpot(7, 200),
-                      const FlSpot(8, 600),
-                      const FlSpot(9, 900),
-                      const FlSpot(10, 700),
-                    ],
-                    isCurved: true,
-                    color: const Color(0xFF8C1C03),
-                    barWidth: 2,
-                    dotData: FlDotData(show: false),
-                    belowBarData: BarAreaData(show: false),
-                  ),
+                barGroups: [
+                  BarChartGroupData(x: 0, barRods: [
+                    BarChartRodData(
+                      toY: 200,
+                      color: const Color(0xFF3D5936),
+                    ),
+                  ]),
+                  BarChartGroupData(x: 1, barRods: [
+                    BarChartRodData(
+                      toY: 300,
+                      color: const Color(0xFF8C1C03),
+                    ),
+                  ]),
                 ],
               ),
             ),

@@ -1,5 +1,3 @@
-// lib/services/auth_service.dart
-
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -25,6 +23,7 @@ class AuthService {
         "salary": 0,
       }),
     );
+
     if (response.statusCode == 200) {
       return response;
     } else if (response.statusCode == 422) {

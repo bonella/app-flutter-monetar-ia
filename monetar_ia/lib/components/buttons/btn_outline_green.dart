@@ -5,6 +5,7 @@ class BtnOutlineGreen extends StatelessWidget {
   final String text;
   final Color textColor;
   final Color borderColor;
+  final bool isLoading;
 
   const BtnOutlineGreen({
     super.key,
@@ -12,6 +13,7 @@ class BtnOutlineGreen extends StatelessWidget {
     required this.text,
     this.textColor = const Color(0xFF738C61),
     this.borderColor = const Color(0xFF738C61),
+    this.isLoading = false,
   });
 
   @override
@@ -28,7 +30,7 @@ class BtnOutlineGreen extends StatelessWidget {
         ),
       ),
       child: TextButton(
-        onPressed: onPressed,
+        onPressed: isLoading ? null : onPressed,
         style: TextButton.styleFrom(
           padding: const EdgeInsets.all(2),
           shape: RoundedRectangleBorder(
@@ -36,13 +38,16 @@ class BtnOutlineGreen extends StatelessWidget {
           ),
         ),
         child: Center(
-          child: Text(
-            text,
-            style: TextStyle(
-              color: textColor,
-              fontSize: 16,
-            ),
-          ),
+          child: isLoading
+              ? CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation(textColor))
+              : Text(
+                  text,
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 16,
+                  ),
+                ),
         ),
       ),
     );
