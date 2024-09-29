@@ -14,6 +14,7 @@ import 'package:monetar_ia/components/buttons/round_btn.dart';
 import 'package:monetar_ia/components/cards/white_card.dart';
 import 'package:monetar_ia/components/footers/footer.dart';
 import 'package:monetar_ia/views/login.dart';
+import 'package:monetar_ia/components/buttons/date_btn.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -23,6 +24,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  DateTime selectedDate = DateTime.now();
+
   @override
   void initState() {
     super.initState();
@@ -113,7 +116,13 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 children: [
                   HeaderHome(
-                    month: 'Agosto',
+                    dateButton: DateButton(
+                      onDateChanged: (DateTime newDate) {
+                        setState(() {
+                          selectedDate = newDate;
+                        });
+                      },
+                    ),
                     onPrevMonth: () {},
                     onNextMonth: () {},
                   ),
@@ -291,7 +300,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         SizedBox(height: 1),
                         Text(
-                          'Metas',
+                          '   Metas   ',
                           style: TextStyle(
                             fontSize: 10.0,
                           ),
@@ -317,7 +326,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         SizedBox(height: 1),
                         Text(
-                          'Perfil  ',
+                          '  Perfil  ',
                           style: TextStyle(
                             fontSize: 10.0,
                           ),

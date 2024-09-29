@@ -55,6 +55,34 @@ class AuthService {
     }
   }
 
+  Future<void> updateUserProfile(
+    String name,
+    String lastName,
+    String currentPassword,
+    String newPassword,
+  ) async {
+    final url =
+        Uri.parse('$_baseUrl/update_profile'); // Altere para o endpoint correto
+    final response = await http.put(
+      url,
+      headers: {
+        "Content-Type": "application/json",
+        'Authorization':
+            'Bearer YOUR_ACCESS_TOKEN', // Adicione o token de autenticação
+      },
+      body: json.encode({
+        "name": name,
+        "last_name": lastName,
+        "current_password": currentPassword,
+        "new_password": newPassword,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Erro ao atualizar perfil: ${response.body}');
+    }
+  }
+
   // Função para obter informações do usuário
   Future<Map<String, dynamic>> getUser() async {
     final response = await http.get(

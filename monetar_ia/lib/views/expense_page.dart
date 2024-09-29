@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:monetar_ia/components/headers/header_add.dart';
 import 'package:monetar_ia/components/cards/white_card.dart';
 import 'package:monetar_ia/components/boxes/info_box.dart';
@@ -6,20 +7,50 @@ import 'package:monetar_ia/components/footers/footer.dart';
 import 'package:monetar_ia/components/buttons/round_btn.dart';
 import 'package:monetar_ia/views/add_page.dart';
 
-class ExpensePage extends StatelessWidget {
+class ExpensePage extends StatefulWidget {
   const ExpensePage({super.key});
 
   @override
+  _ExpensePageState createState() => _ExpensePageState();
+}
+
+class _ExpensePageState extends State<ExpensePage> {
+  DateTime selectedDate = DateTime.now();
+
+  void _onPrevMonth() {
+    setState(() {
+      selectedDate = DateTime(selectedDate.year, selectedDate.month - 1, 1);
+    });
+  }
+
+  void _onNextMonth() {
+    setState(() {
+      selectedDate = DateTime(selectedDate.year, selectedDate.month + 1, 1);
+    });
+  }
+
+  void _onDateChanged(DateTime newDate) {
+    setState(() {
+      selectedDate = newDate;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    String formattedMonth = DateFormat('MMMM/yy').format(selectedDate);
+    String monthDisplay =
+        formattedMonth[0].toUpperCase() + formattedMonth.substring(1);
+
     return Scaffold(
       body: Stack(
         children: [
           Column(
             children: [
               HeaderAdd(
-                month: 'Agosto',
-                onPrevMonth: () {},
-                onNextMonth: () {},
+                month: monthDisplay,
+                onPrevMonth: _onPrevMonth,
+                onNextMonth: _onNextMonth,
+                onDateChanged: _onDateChanged,
                 backgroundColor: const Color(0xFF8C1C03),
                 circleIcon: Icons.keyboard_arrow_down,
                 circleIconColor: Colors.white,

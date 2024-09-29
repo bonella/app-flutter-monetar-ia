@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 class HeaderHome extends StatelessWidget {
-  final String month;
+  final Widget dateButton;
   final VoidCallback onPrevMonth;
   final VoidCallback onNextMonth;
 
   const HeaderHome({
+    required this.dateButton,
     super.key,
-    required this.month,
     required this.onPrevMonth,
     required this.onNextMonth,
   });
@@ -37,34 +37,8 @@ class HeaderHome extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.arrow_back_ios,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                      onPressed: onPrevMonth,
-                    ),
                     const SizedBox(width: 20),
-                    Text(
-                      month,
-                      style: const TextStyle(
-                        fontFamily: 'Kumbh Sans',
-                        fontWeight: FontWeight.w400,
-                        fontSize: 22,
-                        color: Color(0xFFFFFFFF),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(width: 20),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.arrow_forward_ios,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                      onPressed: onNextMonth,
-                    ),
+                    dateButton,
                   ],
                 ),
               ),
@@ -73,6 +47,7 @@ class HeaderHome extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
+                    // Receitas
                     Row(
                       children: [
                         Container(
