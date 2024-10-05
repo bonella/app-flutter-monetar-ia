@@ -6,6 +6,7 @@ import 'package:monetar_ia/views/home_page.dart';
 import 'package:monetar_ia/services/auth_service.dart';
 import 'package:monetar_ia/services/form_validations.dart';
 import 'dart:io';
+import 'package:monetar_ia/services/token_storage.dart';
 
 class CardBtnLogin extends StatefulWidget {
   const CardBtnLogin({super.key});
@@ -77,6 +78,12 @@ class _CardBtnLoginState extends State<CardBtnLogin>
           password: password,
         );
 
+        final token = await TokenStorage().getToken();
+
+        if (token == null) {
+          throw Exception('Token não encontrado após o login.');
+        }
+
         _spinController.stop();
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -110,6 +117,7 @@ class _CardBtnLoginState extends State<CardBtnLogin>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Erro inesperado: ${e.toString()}')),
           );
+          print(e);
         }
       } finally {
         setState(() {

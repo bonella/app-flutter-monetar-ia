@@ -5,7 +5,7 @@ import 'package:monetar_ia/components/cards/white_card.dart';
 import 'package:monetar_ia/components/boxes/info_box.dart';
 import 'package:monetar_ia/components/footers/footer.dart';
 import 'package:monetar_ia/components/buttons/round_btn.dart';
-import 'package:monetar_ia/views/add_page.dart';
+import 'package:monetar_ia/components/popups/add_goal_popup.dart'; // Importe o novo componente
 
 class GoalPage extends StatefulWidget {
   const GoalPage({super.key});
@@ -35,6 +35,22 @@ class _GoalPageState extends State<GoalPage> {
     });
   }
 
+  void _showAddGoalPopup() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AddGoalPopup(
+          onSave: (name, targetAmount, currentAmount, description, deadline) {
+            // Aqui você pode adicionar a lógica para salvar a nova meta
+            print(
+                "Meta adicionada: $name, $targetAmount, $currentAmount, $description, $deadline");
+            // Adicione a lógica para salvar a meta aqui
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     String formattedMonth = DateFormat('MMMM/yy').format(selectedDate);
@@ -57,7 +73,7 @@ class _GoalPageState extends State<GoalPage> {
                   circleIcon: Icons.star,
                   circleIconColor: Colors.white,
                   circleBackgroundColor: const Color(0xFF003566),
-                  label: 'Metas 2024',
+                  label: 'Metas em aberto',
                   value: 'R\$ 80 mil reais',
                 ),
                 const Expanded(
@@ -129,14 +145,7 @@ class _GoalPageState extends State<GoalPage> {
               backgroundColor: Colors.white,
               borderColor: const Color(0xFF003566),
               iconColor: const Color(0xFF003566),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AddPage(),
-                  ),
-                );
-              },
+              onPressed: _showAddGoalPopup,
             ),
           ),
         ],
