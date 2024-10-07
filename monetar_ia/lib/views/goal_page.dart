@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:monetar_ia/components/headers/header_add.dart';
-import 'package:monetar_ia/components/cards/white_card.dart';
-import 'package:monetar_ia/components/boxes/info_box.dart';
-import 'package:monetar_ia/components/footers/footer.dart';
-import 'package:monetar_ia/components/buttons/round_btn.dart';
-import 'package:monetar_ia/components/popups/add_goal_popup.dart'; // Importe o novo componente
+import 'package:monetar_ia/services/request_http.dart';
+import 'package:monetar_ia/models/goal.dart'; // Importar a classe Goal
+import 'package:monetar_ia/services/token_storage.dart'; // Importar a classe TokenStorage
 
 class GoalPage extends StatefulWidget {
   const GoalPage({super.key});
@@ -15,141 +11,54 @@ class GoalPage extends StatefulWidget {
 }
 
 class _GoalPageState extends State<GoalPage> {
-  DateTime selectedDate = DateTime.now();
+  List<Goal> goals = []; // Armazenar objetos do tipo Goal
+  final RequestHttp _requestHttp = RequestHttp();
+  final TokenStorage _tokenStorage =
+      TokenStorage(); // Crie uma instância de TokenStorage
 
-  void _onPrevMonth() {
-    setState(() {
-      selectedDate = DateTime(selectedDate.year, selectedDate.month - 1, 1);
-    });
+  @override
+  void initState() {
+    super.initState();
+    _loadGoals(); // Carregar metas ao iniciar a página
   }
 
-  void _onNextMonth() {
-    setState(() {
-      selectedDate = DateTime(selectedDate.year, selectedDate.month + 1, 1);
-    });
-  }
-
-  void _onDateChanged(DateTime newDate) {
-    setState(() {
-      selectedDate = newDate;
-    });
-  }
-
-  void _showAddGoalPopup() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AddGoalPopup(
-          onSave: (name, targetAmount, currentAmount, description, deadline) {
-            // Aqui você pode adicionar a lógica para salvar a nova meta
-            print(
-                "Meta adicionada: $name, $targetAmount, $currentAmount, $description, $deadline");
-            // Adicione a lógica para salvar a meta aqui
-          },
-        );
-      },
-    );
+  Future<void> _loadGoals() async {
+    try {
+      if (await _tokenStorage.isTokenValid()) {
+        goals = await _requestHttp.getGoals();
+        print(goals);
+        setState(() {});
+      } else {
+        print("Token não está disponível. Faça login novamente.");
+        // Navegar para a página de login ou exibir uma mensagem
+      }
+    } catch (error) {
+      print("Erro ao carregar metas: $error");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    String formattedMonth = DateFormat('MMMM/yy').format(selectedDate);
-    String monthDisplay =
-        formattedMonth[0].toUpperCase() + formattedMonth.substring(1);
-
     return Scaffold(
-      body: Stack(
-        children: [
-          Container(
-            color: Colors.white,
-            child: Column(
-              children: [
-                HeaderAdd(
-                  month: monthDisplay,
-                  onPrevMonth: _onPrevMonth,
-                  onNextMonth: _onNextMonth,
-                  onDateChanged: _onDateChanged,
-                  backgroundColor: const Color(0xFF003566),
-                  circleIcon: Icons.star,
-                  circleIconColor: Colors.white,
-                  circleBackgroundColor: const Color(0xFF003566),
-                  label: 'Metas em aberto',
-                  value: 'R\$ 80 mil reais',
-                ),
-                const Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SizedBox(height: 16),
-                        WhiteCard(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16.0),
-                            child: Column(
-                              children: [
-                                InfoBox(
-                                  title: 'Viajem de fim de ano',
-                                  description: 'R\$ 14.000,00',
-                                  showBadge: true,
-                                  percentage: '+10%',
-                                  borderColor: Color(0xFF003566),
-                                  badgeColor: Color(0xFF003566),
-                                ),
-                                SizedBox(height: 16),
-                                InfoBox(
-                                  title: 'Carro novo',
-                                  description: 'R\$ 60.000,00',
-                                  showBadge: true,
-                                  percentage: '+2%',
-                                  borderColor: Color(0xFF003566),
-                                  badgeColor: Color(0xFF003566),
-                                ),
-                                SizedBox(height: 16),
-                                InfoBox(
-                                  title: 'IR',
-                                  description: 'R\$ 6.000,00',
-                                  showBadge: true,
-                                  percentage: '+5%',
-                                  borderColor: Color(0xFF003566),
-                                  badgeColor: Color(0xFF003566),
-                                ),
-                                SizedBox(height: 16),
-                                InfoBox(
-                                  title: 'Outros',
-                                  description: 'R\$ 500,00',
-                                  showBadge: true,
-                                  percentage: '-1%',
-                                  borderColor: Color(0xFF003566),
-                                  badgeColor: Color(0xFF003566),
-                                ),
-                                SizedBox(height: 16),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const Footer(
-                  backgroundColor: Color(0xFF003566),
-                ),
-              ],
-            ),
-          ),
-          Positioned(
-            bottom: 30,
-            left: MediaQuery.of(context).size.width / 2 - 30,
-            child: RoundButton(
-              icon: Icons.add,
-              backgroundColor: Colors.white,
-              borderColor: const Color(0xFF003566),
-              iconColor: const Color(0xFF003566),
-              onPressed: _showAddGoalPopup,
-            ),
-          ),
-        ],
+      appBar: AppBar(
+        title: const Text('Metas'),
       ),
+      body: goals.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              itemCount: goals.length,
+              itemBuilder: (context, index) {
+                final goal = goals[index];
+                return ListTile(
+                  title: Text(
+                      goal.name), // Acesso à propriedade name da classe Goal
+                  subtitle: Text(
+                      'Valor alvo: ${goal.targetAmount}'), // Acesso à propriedade targetAmount
+                  trailing: Text(
+                      'Atual: ${goal.currentAmount}'), // Acesso à propriedade currentAmount
+                );
+              },
+            ),
     );
   }
 }

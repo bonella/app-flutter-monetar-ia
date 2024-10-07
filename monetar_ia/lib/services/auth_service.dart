@@ -52,6 +52,8 @@ class AuthService {
     if (response.statusCode == 200) {
       final Map<String, dynamic> responseBody = json.decode(response.body);
       String token = responseBody['access_token'];
+      print('Token recebido Auth: $token');
+
       await _tokenStorage.saveToken(token);
       return response;
     } else if (response.statusCode == 401) {

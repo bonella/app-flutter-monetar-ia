@@ -1,6 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'token_storage.dart';
+import '../models/goal.dart'; // Importe a classe Goal
 
 class RequestHttp {
   final String _baseUrl = 'https://testeapi.monetaria.app.br';
@@ -9,6 +10,7 @@ class RequestHttp {
   Future<http.Response> _requestWithToken(String method, String endpoint,
       [Map<String, dynamic>? data]) async {
     final token = await _tokenStorage.getToken();
+    print('Token recuperado WitjToken: $token');
 
     if (token == null) {
       throw Exception('Token não encontrado. Faça login novamente.');
@@ -22,18 +24,28 @@ class RequestHttp {
 
     http.Response response;
 
-    if (method == 'GET') {
-      response = await http.get(url, headers: headers);
-    } else if (method == 'POST') {
-      response =
-          await http.post(url, headers: headers, body: json.encode(data));
-    } else if (method == 'PUT') {
-      response = await http.put(url, headers: headers, body: json.encode(data));
-    } else if (method == 'DELETE') {
-      response = await http.delete(url, headers: headers);
-    } else {
-      throw Exception('Método HTTP inválido.');
+    switch (method) {
+      case 'GET':
+        response = await http.get(url, headers: headers);
+        break;
+      case 'POST':
+        response =
+            await http.post(url, headers: headers, body: json.encode(data));
+        break;
+      case 'PUT':
+        response =
+            await http.put(url, headers: headers, body: json.encode(data));
+        break;
+      case 'DELETE':
+        response = await http.delete(url, headers: headers);
+        break;
+      default:
+        throw Exception('Método HTTP inválido.');
     }
+
+    print('Requisição para $url');
+    print('Status da resposta: ${response.statusCode}');
+    print('Corpo da resposta: ${response.body}');
 
     return _handleResponse(response);
   }
@@ -58,9 +70,12 @@ class RequestHttp {
   http.Response _handleResponse(http.Response response) {
     if (response.statusCode == 200 || response.statusCode == 201) {
       return response;
-    } else {
-      throw Exception('Erro na requisição: ${response.body}');
+    } else if (response.statusCode == 401) {
+      // Lógica para lidar com token expirado ou inválido
+      print("Token expirado ou inválido. Redirecionando para login...");
+      // Aqui você pode adicionar lógica para lidar com o logout, se necessário
     }
+    throw Exception('Erro na requisição: ${response.body}');
   }
 
   // CRUD para metas
@@ -70,9 +85,17 @@ class RequestHttp {
     return await post('goals/create', goalData);
   }
 
-  // Obter todas as metas (ou uma meta específica, se necessário)
-  Future<http.Response> getGoals() async {
-    return await get('goals');
+  // Obter todas as metas (retorna uma lista de Goal)
+  Future<List<Goal>> getGoals() async {
+    final response = await get('goals'); // Obtém a resposta da API
+    return parseGoals(
+        response.body); // Converte a resposta em uma lista de Goals
+  }
+
+  // Método para converter o JSON da resposta em uma lista de Goals
+  List<Goal> parseGoals(String responseBody) {
+    final List<dynamic> parsed = json.decode(responseBody);
+    return parsed.map<Goal>((json) => Goal.fromJson(json)).toList();
   }
 
   // Atualizar uma meta existente
