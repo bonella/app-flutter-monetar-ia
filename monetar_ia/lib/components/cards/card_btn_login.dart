@@ -86,10 +86,6 @@ class _CardBtnLoginState extends State<CardBtnLogin>
 
         _spinController.stop();
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login realizado com sucesso!')),
-        );
-
         Navigator.push(
           context,
           MaterialPageRoute(

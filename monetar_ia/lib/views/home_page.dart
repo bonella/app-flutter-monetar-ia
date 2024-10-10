@@ -15,6 +15,7 @@ import 'package:monetar_ia/components/cards/white_card.dart';
 import 'package:monetar_ia/components/footers/footer.dart';
 import 'package:monetar_ia/views/login.dart';
 import 'package:monetar_ia/components/buttons/date_btn.dart';
+import 'package:monetar_ia/models/goal.dart'; // Certifique-se de que a importação do modelo Goal esteja correta
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -106,6 +107,30 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Criação de instâncias de Goal
+    Goal totalMonthGoal = Goal(
+      id: 1,
+      userId: 123, // Use o ID real do usuário
+      name: 'Total do mês de agosto', // Nome descritivo
+      targetAmount: 10000.0, // Meta total
+      currentAmount:
+          2500.0, // Quantia atual (pode ser de uma variável ou valor fixo)
+      description: 'Descrição da meta total do mês', // Descrição opcional
+      deadline: DateTime.parse('2024-08-31'), // Data limite
+      createdAt: DateTime.now(), // Data de criação, use o tempo atual
+    );
+
+    Goal currentGoal = Goal(
+      id: 2,
+      userId: 123, // Use o ID real do usuário
+      name: 'Meta atual', // Nome descritivo
+      targetAmount: 5000.0, // Meta total
+      currentAmount: 3000.0, // Quantia atual
+      description: 'Descrição da meta atual', // Descrição opcional
+      deadline: DateTime.parse('2024-12-31'), // Data limite
+      createdAt: DateTime.now(), // Data de criação
+    );
+
     return WillPopScope(
       onWillPop: () => _onWillPop(context),
       child: Scaffold(
@@ -141,21 +166,7 @@ class _HomePageState extends State<HomePage> {
                                     horizontal: 16.0,
                                   ),
                                   child: Column(
-                                    children: [
-                                      InfoBox(
-                                        title: 'Total do mês de agosto:',
-                                        description: '10 mil reais',
-                                        showBadge: true,
-                                        percentage: '+2,5%',
-                                      ),
-                                      SizedBox(height: 16),
-                                      InfoBox(
-                                        title: 'Total da meta atual',
-                                        description: '4%',
-                                        showBadge: true,
-                                        percentage: '-1,2%',
-                                      ),
-                                    ],
+                                    children: [],
                                   ),
                                 ),
                                 Padding(
@@ -178,6 +189,19 @@ class _HomePageState extends State<HomePage> {
                                 const SizedBox(height: 16),
                               ],
                             ),
+                          ),
+                          // Passando as instâncias de Goal para InfoBox
+                          InfoBox(
+                            title: totalMonthGoal.name,
+                            description: 'totalMonthGoal.description',
+                            creationDate: totalMonthGoal.creationDate,
+                            goal: totalMonthGoal, // Primeiro InfoBox
+                          ),
+                          InfoBox(
+                            title: totalMonthGoal.name,
+                            description: 'totalMonthGoal.description',
+                            creationDate: totalMonthGoal.creationDate,
+                            goal: totalMonthGoal,
                           ),
                         ],
                       ),
@@ -223,12 +247,12 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   GestureDetector(
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const RevenuePage(),
-                        ),
-                      );
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) => const RevenuePage(),
+                      //   ),
+                      // );
                     },
                     child: const Column(
                       children: [
@@ -249,12 +273,12 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(width: 32),
                   GestureDetector(
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ExpensePage(),
-                        ),
-                      );
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) => const ExpensePage(),
+                      //   ),
+                      // );
                     },
                     child: const Column(
                       children: [
@@ -300,7 +324,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         SizedBox(height: 1),
                         Text(
-                          '   Metas   ',
+                          'Metas',
                           style: TextStyle(
                             fontSize: 10.0,
                           ),
@@ -326,7 +350,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         SizedBox(height: 1),
                         Text(
-                          '  Perfil  ',
+                          'Perfil',
                           style: TextStyle(
                             fontSize: 10.0,
                           ),

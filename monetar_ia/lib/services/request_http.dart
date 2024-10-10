@@ -1,7 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'token_storage.dart';
-import '../models/goal.dart'; // Importe a classe Goal
+import '../models/goal.dart';
 
 class RequestHttp {
   final String _baseUrl = 'https://testeapi.monetaria.app.br';
@@ -19,7 +19,7 @@ class RequestHttp {
     final url = Uri.parse('$_baseUrl/$endpoint');
     final headers = {
       "Content-Type": "application/json",
-      "Authorization": "Bearer $token",
+      "Authorization": "bearer $token",
     };
 
     http.Response response;
@@ -27,6 +27,7 @@ class RequestHttp {
     switch (method) {
       case 'GET':
         response = await http.get(url, headers: headers);
+        print("Oi $headers");
         break;
       case 'POST':
         response =
@@ -72,8 +73,8 @@ class RequestHttp {
       return response;
     } else if (response.statusCode == 401) {
       // Lógica para lidar com token expirado ou inválido
-      print("Token expirado ou inválido. Redirecionando para login...");
-      // Aqui você pode adicionar lógica para lidar com o logout, se necessário
+      // print("Token expirado ou inválido. Redirecionando para login...");
+      // print(response.body);
     }
     throw Exception('Erro na requisição: ${response.body}');
   }
@@ -87,9 +88,8 @@ class RequestHttp {
 
   // Obter todas as metas (retorna uma lista de Goal)
   Future<List<Goal>> getGoals() async {
-    final response = await get('goals'); // Obtém a resposta da API
-    return parseGoals(
-        response.body); // Converte a resposta em uma lista de Goals
+    final response = await get('goals/');
+    return parseGoals(response.body);
   }
 
   // Método para converter o JSON da resposta em uma lista de Goals

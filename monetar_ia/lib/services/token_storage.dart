@@ -17,7 +17,7 @@ class TokenStorage {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
-      print("Token recuperado: $token"); // Print para o token recuperado
+      // print("Token recuperado: $token"); // Print para o token recuperado
       return token;
     } catch (e) {
       print("Erro ao obter o token: $e");
@@ -30,7 +30,7 @@ class TokenStorage {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.remove('auth_token');
-      print("Token limpo."); // Print após limpar
+      // print("Token limpo."); // Print após limpar
     } catch (e) {
       print("Erro ao limpar o token: $e");
     }
@@ -40,7 +40,7 @@ class TokenStorage {
   Future<bool> isTokenValid() async {
     final token = await getToken();
     final isValid = token != null;
-    print("Token é válido? $isValid"); // Print sobre a validade do token
+    // print("Token é válido? $isValid");
     return isValid;
   }
 

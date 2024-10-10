@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:monetar_ia/services/request_http.dart';
+import 'package:monetar_ia/views/goal_page.dart';
 
 class AddGoalPopup extends StatefulWidget {
   final Function(String, String, String, String, DateTime?) onSave;
@@ -24,11 +25,14 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
   final TextEditingController targetAmountController = TextEditingController();
   final TextEditingController currentAmountController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
+  final TextEditingController deadlineStringController =
+      TextEditingController();
 
   final FocusNode nameFocusNode = FocusNode();
   final FocusNode targetAmountFocusNode = FocusNode();
   final FocusNode currentAmountFocusNode = FocusNode();
   final FocusNode descriptionFocusNode = FocusNode();
+  final FocusNode deadlineFocusNode = FocusNode();
 
   final RequestHttp _requestHttp = RequestHttp();
 
@@ -42,6 +46,8 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
     targetAmountFocusNode.dispose();
     currentAmountFocusNode.dispose();
     descriptionFocusNode.dispose();
+    deadlineFocusNode.dispose();
+    deadlineStringController.dispose();
     super.dispose();
   }
 
@@ -112,10 +118,15 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
                   hint: "Descrição",
                   onChanged: (value) => description = value,
                   focusNode: descriptionFocusNode,
+                  nextFocusNode: deadlineFocusNode,
                 ),
                 const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () async {
+                _buildDateField(
+                  hint: _deadline == null
+                      ? "Data Limite"
+                      : DateFormat('dd/MM/yyyy').format(_deadline!),
+                  selectedDate: _deadline,
+                  onTap: () async {
                     DateTime? selectedDate = await showDatePicker(
                       context: context,
                       initialDate: _deadline ?? DateTime.now(),
@@ -127,8 +138,6 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
                             primaryColor: const Color(0xFF003566),
                             colorScheme: const ColorScheme.light(
                                 primary: Color(0xFF003566)),
-                            buttonTheme: const ButtonThemeData(
-                                textTheme: ButtonTextTheme.primary),
                           ),
                           child: child!,
                         );
@@ -138,32 +147,26 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
                       setState(() {
                         _deadline = selectedDate;
                         _dateError = null;
+                        deadlineStringController.text =
+                            DateFormat('dd/MM/yyyy').format(selectedDate);
                       });
                     }
                   },
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: Text(
-                    _deadline == null
-                        ? "Data Limite"
-                        : "Prazo: ${DateFormat('dd/MM/yyyy').format(_deadline!)}",
-                    style: TextStyle(
-                      color: _deadline == null
-                          ? const Color.fromARGB(255, 99, 99, 99)
-                          : const Color(0xFF003566),
-                      fontSize: 16,
-                    ),
-                  ),
+                  focusNode: deadlineFocusNode,
+                  errorText: _dateError,
+                  controller: deadlineStringController,
+                  onChanged: (value) {
+                    setState(() {
+                      // Validação da string de data
+                      _dateError = _validateDateString(value);
+                      if (_dateError == null) {
+                        _deadline = DateFormat('dd/MM/yyyy').parse(value);
+                      } else {
+                        _deadline = null;
+                      }
+                    });
+                  },
                 ),
-                if (_dateError != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 0),
-                    child: Text(
-                      _dateError!,
-                      style: errorTextStyle,
-                    ),
-                  ),
                 const Divider(thickness: 5, color: Colors.grey),
               ],
             ),
@@ -180,7 +183,11 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
                 style: TextStyle(color: Color(0xFF003566)),
               ),
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const GoalPage()),
+                  (Route<dynamic> route) => false,
+                );
               },
             ),
             TextButton(
@@ -217,7 +224,11 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
                       ),
                     );
 
-                    Navigator.of(context).pop();
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => const GoalPage()),
+                      (Route<dynamic> route) => false,
+                    );
                   } catch (error) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -228,7 +239,7 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
                   }
                 } else {
                   setState(() {
-                    _dateError = _deadline == null ? 'Defina uma data' : null;
+                    _dateError = _deadline == null ? 'Campo obrigatório' : null;
                   });
                 }
               },
@@ -239,6 +250,62 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       contentPadding: const EdgeInsets.all(16),
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+    );
+  }
+
+  // Função para validar a string da data
+  String? _validateDateString(String value) {
+    if (value.isEmpty) {
+      return 'Campo obrigatório';
+    }
+    try {
+      DateTime parsedDate = DateFormat('dd/MM/yyyy').parseStrict(value);
+      if (parsedDate.isBefore(DateTime.now())) {
+        return 'Data deve ser maior ou igual a hoje';
+      }
+    } catch (e) {
+      return 'Data inválida';
+    }
+    return null;
+  }
+
+  Widget _buildDateField({
+    required String hint,
+    DateTime? selectedDate,
+    required VoidCallback onTap,
+    required FocusNode focusNode,
+    String? errorText,
+    required TextEditingController controller,
+    required Function(String) onChanged,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+        onTap();
+      },
+      child: AbsorbPointer(
+        child: TextFormField(
+          focusNode: focusNode,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: const TextStyle(color: Color.fromARGB(255, 99, 99, 99)),
+            enabledBorder: const UnderlineInputBorder(
+              borderSide: BorderSide(color: Color.fromARGB(255, 99, 99, 99)),
+            ),
+            focusedBorder: const UnderlineInputBorder(
+              borderSide: BorderSide(color: Color(0xFF003566), width: 2),
+            ),
+            errorText: errorText,
+          ),
+          controller: controller,
+          onChanged: onChanged,
+          style: TextStyle(
+            color: selectedDate == null
+                ? const Color.fromARGB(255, 99, 99, 99)
+                : const Color(0xFF003566),
+          ),
+        ),
+      ),
     );
   }
 

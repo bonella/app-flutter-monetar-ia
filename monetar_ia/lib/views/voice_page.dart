@@ -57,7 +57,7 @@ class _VoicePageState extends State<VoicePage> {
         historic[historic.length - 1] = displayedText;
       });
       _scrollToBottom();
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future.delayed(const Duration(milliseconds: 50));
     }
   }
 
@@ -65,7 +65,7 @@ class _VoicePageState extends State<VoicePage> {
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
         _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 100),
         curve: Curves.easeOut,
       );
     }
