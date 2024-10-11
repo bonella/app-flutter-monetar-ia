@@ -10,6 +10,7 @@ class HeaderAdd extends StatelessWidget {
   final Color circleBackgroundColor;
   final String label;
   final String value;
+  final Function(DateTime) onDateChanged;
 
   const HeaderAdd({
     super.key,
@@ -22,6 +23,7 @@ class HeaderAdd extends StatelessWidget {
     required this.circleBackgroundColor,
     required this.label,
     required this.value,
+    required this.onDateChanged,
   });
 
   @override

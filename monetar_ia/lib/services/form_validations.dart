@@ -1,6 +1,7 @@
-// lib/services/form_validations.dart
-
 String? validateName(String? value) {
+  final regex = RegExp(r"^[A-Za-zÀ-ÿ]+$");
+  final numberRegex = RegExp(r"\d");
+
   if (value == null || value.isEmpty) {
     return 'Nome é obrigatório';
   }
@@ -9,7 +10,10 @@ String? validateName(String? value) {
     return 'Nome deve ter pelo menos 3 letras';
   }
 
-  final regex = RegExp(r"^[A-Za-zÀ-ÿ]+$");
+  if (numberRegex.hasMatch(value)) {
+    return 'Nome não pode conter números';
+  }
+
   if (!regex.hasMatch(value)) {
     return 'Nome não pode conter caracteres especiais';
   }
@@ -18,11 +22,23 @@ String? validateName(String? value) {
 }
 
 String? validateLastName(String? value) {
-  final regex = RegExp(r"^[a-zA-Z\s]{3,256}$");
+  final regex = RegExp(r"^[A-Za-zÀ-ÿ\s]{3,256}$");
   final specialCharRegex = RegExp(r'[^\w\s]');
+  final numberRegex = RegExp(r'\d');
+  final leadingTrailingSpacesRegex = RegExp(r'^\s|\s$');
+  final multipleSpacesRegex = RegExp(r'\s{2,}');
 
   if (value == null || value.isEmpty) {
     return 'Sobrenome é obrigatório';
+  }
+  if (leadingTrailingSpacesRegex.hasMatch(value)) {
+    return 'Quantidade de espaços indevida';
+  }
+  if (multipleSpacesRegex.hasMatch(value)) {
+    return 'Quantidade de espaços indevida';
+  }
+  if (numberRegex.hasMatch(value)) {
+    return 'Sobrenome não pode conter números';
   }
   if (specialCharRegex.hasMatch(value)) {
     return 'Sobrenome não pode conter caractere especial';

@@ -5,6 +5,8 @@ import 'package:monetar_ia/views/register_page.dart';
 import 'package:monetar_ia/views/home_page.dart';
 import 'package:monetar_ia/services/auth_service.dart';
 import 'package:monetar_ia/services/form_validations.dart';
+import 'dart:io';
+import 'package:monetar_ia/services/token_storage.dart';
 
 class CardBtnLogin extends StatefulWidget {
   const CardBtnLogin({super.key});
@@ -13,42 +15,110 @@ class CardBtnLogin extends StatefulWidget {
   _CardBtnLoginState createState() => _CardBtnLoginState();
 }
 
-class _CardBtnLoginState extends State<CardBtnLogin> {
+class _CardBtnLoginState extends State<CardBtnLogin>
+    with TickerProviderStateMixin, WidgetsBindingObserver {
+  bool _isPasswordVisible = false;
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  final FocusNode _emailFocusNode = FocusNode();
+  final FocusNode _passwordFocusNode = FocusNode();
+
+  late AnimationController _spinController;
+  late Animation<double> _spinAnimation;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _spinController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    );
+    _spinAnimation =
+        Tween<double>(begin: 0.0, end: .3).animate(_spinController);
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _spinController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _emailController.clear();
+      _passwordController.clear();
+      _formKey.currentState?.reset();
+    }
+  }
+
   Future<void> _login() async {
     if (_formKey.currentState?.validate() ?? false) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      _spinController.repeat();
+
       final email = _emailController.text;
       final password = _passwordController.text;
 
       try {
-        final response = await AuthService().signin(
+        await AuthService().signin(
           email: email,
           password: password,
         );
-        if (response.statusCode == 200) {
+
+        final token = await TokenStorage().getToken();
+
+        if (token == null) {
+          throw Exception('Token não encontrado após o login.');
+        }
+
+        _spinController.stop();
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const HomePage(),
+          ),
+        );
+      } on SocketException catch (_) {
+        _spinController.stop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erro ao se conectar com o servidor: \nSem conexão'),
+          ),
+        );
+      } catch (e) {
+        _spinController.stop();
+
+        if (e.toString().contains('E-mail ou senha incorretos')) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Login realizado com sucesso!')),
-          );
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const HomePage(),
+            const SnackBar(
+              content:
+                  Text('Erro ao realizar login: \nUsuário ou senha incorretos'),
             ),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Erro ao realizar login: ${response.body}'),
-            ),
+            SnackBar(content: Text('Erro inesperado: ${e.toString()}')),
           );
+          print(e);
         }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao se conectar com o servidor: $e')),
-        );
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -108,6 +178,7 @@ class _CardBtnLoginState extends State<CardBtnLogin> {
               const SizedBox(height: 20),
               TextFormField(
                 controller: _emailController,
+                focusNode: _emailFocusNode,
                 decoration: InputDecoration(
                   labelText: 'Email',
                   border: OutlineInputBorder(
@@ -121,14 +192,24 @@ class _CardBtnLoginState extends State<CardBtnLogin> {
                     color: Colors.grey[700],
                     fontSize: 16,
                   ),
+                  floatingLabelStyle: TextStyle(
+                    color: Colors.grey[700],
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 keyboardType: TextInputType.emailAddress,
                 validator: validateEmail,
+                textInputAction: TextInputAction.next,
+                onFieldSubmitted: (_) {
+                  FocusScope.of(context).requestFocus(_passwordFocusNode);
+                },
               ),
               const SizedBox(height: 12.0),
               TextFormField(
                 controller: _passwordController,
-                obscureText: true,
+                focusNode: _passwordFocusNode,
+                obscureText: !_isPasswordVisible,
                 decoration: InputDecoration(
                   labelText: 'Senha',
                   border: OutlineInputBorder(
@@ -142,15 +223,47 @@ class _CardBtnLoginState extends State<CardBtnLogin> {
                     color: Colors.grey[700],
                     fontSize: 16,
                   ),
+                  floatingLabelStyle: TextStyle(
+                    color: Colors.grey[700],
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color: Colors.grey[700],
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible;
+                      });
+                    },
+                  ),
                 ),
                 validator: validatePassword,
+                textInputAction: TextInputAction.done,
+                onFieldSubmitted: (_) {},
               ),
               const SizedBox(height: 40.0),
               Center(
-                child: BtnOutlineWhite(
-                  onPressed: _login,
-                  text: 'Entrar',
-                ),
+                child: _isLoading
+                    ? AnimatedBuilder(
+                        animation: _spinAnimation,
+                        builder: (context, child) {
+                          return Transform.rotate(
+                            angle: _spinAnimation.value * 6.3,
+                            child: const CircularProgressIndicator(
+                              color: Colors.white,
+                            ),
+                          );
+                        },
+                      )
+                    : BtnOutlineWhite(
+                        onPressed: _login,
+                        text: 'Entrar',
+                      ),
               ),
               const SizedBox(height: 16.0),
               Center(
