@@ -13,6 +13,20 @@ class DateButton extends StatefulWidget {
 class _DateButtonState extends State<DateButton> {
   DateTime selectedDate = DateTime.now().toLocal();
 
+  void _selectPreviousDay() {
+    setState(() {
+      selectedDate = selectedDate.subtract(const Duration(days: 1));
+      widget.onDateChanged(selectedDate);
+    });
+  }
+
+  void _selectNextDay() {
+    setState(() {
+      selectedDate = selectedDate.add(const Duration(days: 1));
+      widget.onDateChanged(selectedDate);
+    });
+  }
+
   void _selectPreviousMonth() {
     setState(() {
       if (selectedDate.month == 1) {
@@ -95,24 +109,23 @@ class _DateButtonState extends State<DateButton> {
             IconButton(
               icon: const Icon(Icons.arrow_back_ios,
                   color: Colors.white, size: 24),
-              onPressed: _selectPreviousMonth,
+              onPressed: _selectPreviousDay,
             ),
-            SizedBox(
-              width: 130,
-              child: GestureDetector(
-                onTap: () => _selectDateFromCalendar(context),
-                child: Text(
-                  formattedDate,
-                  style: const TextStyle(fontSize: 22, color: Colors.white),
-                  overflow: TextOverflow.visible,
-                  textAlign: TextAlign.center,
-                ),
+            const SizedBox(width: 1),
+            GestureDetector(
+              onTap: () => _selectDateFromCalendar(context),
+              child: Text(
+                formattedDate,
+                style: const TextStyle(fontSize: 22, color: Colors.white),
+                overflow: TextOverflow.visible,
+                textAlign: TextAlign.center,
               ),
             ),
+            const SizedBox(width: 2),
             IconButton(
               icon: const Icon(Icons.arrow_forward_ios,
                   color: Colors.white, size: 24),
-              onPressed: _selectNextMonth,
+              onPressed: _selectNextDay,
             ),
           ],
         ),

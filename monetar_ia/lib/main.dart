@@ -22,6 +22,11 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+        textSelectionTheme: TextSelectionThemeData(
+          cursorColor: const Color(0xFF003566),
+          selectionColor: const Color(0xFF003566).withOpacity(0.4),
+          selectionHandleColor: const Color(0xFF003566),
+        ),
       ),
       home: const LoginPage(),
       debugShowCheckedModeBanner: false,

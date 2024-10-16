@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:monetar_ia/components/buttons/search_button.dart';
+import 'package:monetar_ia/components/buttons/pdf_button.dart';
 
-class HeaderAdd extends StatelessWidget {
+class HeaderAdd extends StatefulWidget {
   final String month;
   final VoidCallback onPrevMonth;
   final VoidCallback onNextMonth;
@@ -11,6 +13,7 @@ class HeaderAdd extends StatelessWidget {
   final String label;
   final String value;
   final Function(DateTime) onDateChanged;
+  final Function(String) onSearchGoals;
 
   const HeaderAdd({
     super.key,
@@ -24,7 +27,22 @@ class HeaderAdd extends StatelessWidget {
     required this.label,
     required this.value,
     required this.onDateChanged,
+    required this.onSearchGoals,
   });
+
+  @override
+  _HeaderAddState createState() => _HeaderAddState();
+}
+
+class _HeaderAddState extends State<HeaderAdd> {
+  final TextEditingController _searchController = TextEditingController();
+  bool _showSearchField = false;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,9 +50,8 @@ class HeaderAdd extends StatelessWidget {
       color: Colors.white,
       child: Container(
         width: double.infinity,
-        height: 180,
         decoration: BoxDecoration(
-          color: backgroundColor,
+          color: widget.backgroundColor,
           borderRadius: const BorderRadius.only(
             bottomLeft: Radius.circular(20),
             bottomRight: Radius.circular(20),
@@ -53,11 +70,11 @@ class HeaderAdd extends StatelessWidget {
                       color: Colors.white,
                       size: 24,
                     ),
-                    onPressed: onPrevMonth,
+                    onPressed: widget.onPrevMonth,
                   ),
                   const SizedBox(width: 20),
                   Text(
-                    month,
+                    widget.month,
                     style: const TextStyle(
                       fontFamily: 'Kumbh Sans',
                       fontWeight: FontWeight.w400,
@@ -73,7 +90,7 @@ class HeaderAdd extends StatelessWidget {
                       color: Colors.white,
                       size: 24,
                     ),
-                    onPressed: onNextMonth,
+                    onPressed: widget.onNextMonth,
                   ),
                 ],
               ),
@@ -85,42 +102,90 @@ class HeaderAdd extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: circleBackgroundColor,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                        child: Center(
-                          child: IconButton(
-                            icon: Icon(
-                              circleIcon,
-                              color: circleIconColor,
-                              size: 20,
-                            ),
-                            onPressed: () {},
-                            padding: EdgeInsets.zero,
-                          ),
-                        ),
+                      Icon(
+                        widget.circleIcon,
+                        color: widget.circleIconColor,
+                        size: 32,
                       ),
                       const SizedBox(width: 8),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            label,
+                            widget.label,
                             style: const TextStyle(color: Colors.white),
                           ),
                           Text(
-                            value,
+                            widget.value,
                             style: const TextStyle(
-                                color: Colors.white, fontSize: 14),
+                              color: Colors.white,
+                              fontSize: 14,
+                            ),
                           ),
                         ],
                       ),
                     ],
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding:
+                  const EdgeInsets.only(top: 16.0, bottom: 10.0, right: 16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (_showSearchField)
+                    Expanded(
+                      child: Container(
+                        height: 40,
+                        margin: const EdgeInsets.only(left: 16, right: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [
+                              Color(0xFF6BA6FF),
+                              Color(0xFF003566),
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                          border: const Border(
+                            left: BorderSide(color: Colors.white, width: 2),
+                            bottom: BorderSide(color: Colors.white, width: 2),
+                          ),
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(
+                            hintText: 'Buscar metas',
+                            hintStyle: TextStyle(color: Colors.white70),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(
+                              vertical: 8,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            widget.onSearchGoals(value);
+                          },
+                        ),
+                      ),
+                    ),
+                  SearchButton(
+                    icon: _showSearchField ? Icons.close : Icons.search,
+                    onPressed: () {
+                      setState(() {
+                        _showSearchField = !_showSearchField;
+                      });
+                    },
+                  ),
+                  const SizedBox(width: 10),
+                  PdfButton(
+                    onPressed: () {
+                      // Ação para o botão de gerar relatório
+                    },
                   ),
                 ],
               ),

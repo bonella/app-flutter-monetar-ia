@@ -94,7 +94,7 @@ class AuthService {
   }
 
   // Função para obter informações do usuário
-  Future<Map<String, dynamic>> getUser() async {
+  Future<Map<String, dynamic>?> getUser() async {
     final token = await _tokenStorage.getToken();
     final response = await http.get(
       Uri.parse('$_baseUrl/protected'),
@@ -108,6 +108,22 @@ class AuthService {
       return json.decode(response.body);
     } else {
       throw Exception('Falha ao carregar informações do usuário');
+    }
+  }
+
+  // Função para pegar o id do usuário
+  Future<int> getUserId() async {
+    try {
+      final user = await getUser();
+      if (user != null && user['userId'] != null) {
+        return user['userId']; // Retorna o user_id se encontrado
+      } else {
+        print('User not found or user_id is null');
+        return -1; // Retorna -1 se não encontrar o ID
+      }
+    } catch (error) {
+      print('Error fetching user ID: $error');
+      return -1; // Retorna -1 em caso de erro
     }
   }
 

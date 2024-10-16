@@ -32,6 +32,10 @@ flutter:
   assets:
     - lib/assets/logo.png
     - lib/assets/logo2.png
+    - lib/assets/lupa.png
+    - lib/assets/relatorio.png
+    - lib/assets/trofeu.png
+    - lib/assets/fundo_metas2.png
 
 flutter_icons:
   android: true

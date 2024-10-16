@@ -52,4 +52,16 @@ class Goal {
           : null,
     );
   }
+
+  // Método para converter a instância para JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'user_id': userId,
+      'name': name,
+      'target_amount': targetAmount,
+      'current_amount': currentAmount,
+      'description': description,
+      'deadline': deadline.toIso8601String(),
+    };
+  }
 }
