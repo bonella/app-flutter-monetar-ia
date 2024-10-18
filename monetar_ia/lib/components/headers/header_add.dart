@@ -142,26 +142,22 @@ class _HeaderAddState extends State<HeaderAdd> {
                         margin: const EdgeInsets.only(left: 16, right: 10),
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFF6BA6FF),
-                              Color(0xFF003566),
-                            ],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          ),
                           borderRadius: BorderRadius.circular(8),
                           border: const Border(
                             left: BorderSide(color: Colors.white, width: 2),
                             bottom: BorderSide(color: Colors.white, width: 2),
+                            // right: BorderSide(color: Colors.white, width: 2),
+                            // top: BorderSide(color: Color(0xFF003566), width: 2),
                           ),
+                          // color: Colors.white,
                         ),
                         child: TextField(
                           controller: _searchController,
+                          cursorColor: Colors.white,
                           style: const TextStyle(color: Colors.white),
                           decoration: const InputDecoration(
                             hintText: 'Buscar metas',
-                            hintStyle: TextStyle(color: Colors.white70),
+                            hintStyle: TextStyle(color: Colors.white),
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.symmetric(
                               vertical: 8,

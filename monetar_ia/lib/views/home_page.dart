@@ -237,7 +237,7 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-            Positioned(
+            const Positioned(
               height: 50,
               bottom: 5,
               left: 16,
@@ -245,57 +245,7 @@ class _HomePageState extends State<HomePage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  GestureDetector(
-                    onTap: () {
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder: (context) => const RevenuePage(),
-                      //   ),
-                      // );
-                    },
-                    child: const Column(
-                      children: [
-                        Icon(
-                          Icons.attach_money_outlined,
-                          size: 30.0,
-                        ),
-                        SizedBox(height: 1),
-                        Text(
-                          'Receitas',
-                          style: TextStyle(
-                            fontSize: 10.0,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 32),
-                  GestureDetector(
-                    onTap: () {
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder: (context) => const ExpensePage(),
-                      //   ),
-                      // );
-                    },
-                    child: const Column(
-                      children: [
-                        Icon(
-                          Icons.money_off,
-                          size: 30.0,
-                        ),
-                        SizedBox(height: 1),
-                        Text(
-                          'Despesas',
-                          style: TextStyle(
-                            fontSize: 10.0,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  SizedBox(width: 32),
                 ],
               ),
             ),

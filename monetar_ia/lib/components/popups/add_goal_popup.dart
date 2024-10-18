@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:monetar_ia/services/request_http.dart';
 import 'package:monetar_ia/views/goal_page.dart';
+import 'package:monetar_ia/utils/form_validations.dart';
 
 class AddGoalPopup extends StatefulWidget {
   final Function(String, String, String, String, DateTime?) onSave;
@@ -56,6 +57,12 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
     fontSize: 12,
   );
 
+  void showSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -96,6 +103,8 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
                   onChanged: (value) => name = value,
                   focusNode: nameFocusNode,
                   nextFocusNode: targetAmountFocusNode,
+                  validator: validateGoal,
+                  textCapitalization: TextCapitalization.words,
                 ),
                 _buildTextField(
                   controller: targetAmountController,
@@ -104,6 +113,7 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
                   focusNode: targetAmountFocusNode,
                   nextFocusNode: currentAmountFocusNode,
                   isNumeric: true,
+                  validator: validateNumericInput,
                 ),
                 _buildTextField(
                   controller: currentAmountController,
@@ -112,6 +122,7 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
                   focusNode: currentAmountFocusNode,
                   isNumeric: true,
                   nextFocusNode: descriptionFocusNode,
+                  validator: validateNumericInput,
                 ),
                 _buildTextField(
                   controller: descriptionController,
@@ -119,6 +130,8 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
                   onChanged: (value) => description = value,
                   focusNode: descriptionFocusNode,
                   nextFocusNode: deadlineFocusNode,
+                  validator: validateGoal,
+                  textCapitalization: TextCapitalization.sentences,
                 ),
                 const SizedBox(height: 16),
                 _buildDateField(
@@ -157,8 +170,7 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
                   controller: deadlineStringController,
                   onChanged: (value) {
                     setState(() {
-                      // Validação da string de data
-                      _dateError = _validateDateString(value);
+                      _dateError = validateDateString(value);
                       if (_dateError == null) {
                         _deadline = DateFormat('dd/MM/yyyy').parse(value);
                       } else {
@@ -217,11 +229,11 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
 
                     await _requestHttp.createGoal(goalData);
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Meta salva com sucesso!'),
-                        duration: Duration(seconds: 2),
-                      ),
+                    showSnackbar('Meta salva com sucesso!');
+                    Navigator.of(context).pop();
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const GoalPage()),
                     );
 
                     Navigator.pushAndRemoveUntil(
@@ -230,16 +242,20 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
                       (Route<dynamic> route) => false,
                     );
                   } catch (error) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Erro ao salvar a meta: $error'),
-                        duration: const Duration(seconds: 2),
-                      ),
+                    showSnackbar(
+                        'Erro ao salvar a meta! \n Tente mais tarde ou verifique os campos digitados.');
+                    Navigator.of(context).pop();
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const GoalPage()),
                     );
+
+                    // )
                   }
                 } else {
                   setState(() {
-                    _dateError = _deadline == null ? 'Campo obrigatório' : null;
+                    _dateError =
+                        _deadline == null ? 'Data é obrigatório' : null;
                   });
                 }
               },
@@ -253,22 +269,6 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
     );
   }
 
-  // Função para validar a string da data
-  String? _validateDateString(String value) {
-    if (value.isEmpty) {
-      return 'Campo obrigatório';
-    }
-    try {
-      DateTime parsedDate = DateFormat('dd/MM/yyyy').parseStrict(value);
-      if (parsedDate.isBefore(DateTime.now())) {
-        return 'Data deve ser maior ou igual a hoje';
-      }
-    } catch (e) {
-      return 'Data inválida';
-    }
-    return null;
-  }
-
   Widget _buildDateField({
     required String hint,
     DateTime? selectedDate,
@@ -278,57 +278,67 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
     required TextEditingController controller,
     required Function(String) onChanged,
   }) {
-    return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-        onTap();
-      },
-      child: AbsorbPointer(
-        child: TextFormField(
-          focusNode: focusNode,
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: const TextStyle(color: Color.fromARGB(255, 99, 99, 99)),
-            enabledBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(color: Color.fromARGB(255, 99, 99, 99)),
+    return Row(
+      children: [
+        Expanded(
+          child: GestureDetector(
+            onTap: () {
+              FocusScope.of(context).unfocus();
+              onTap();
+            },
+            child: AbsorbPointer(
+              child: TextFormField(
+                focusNode: focusNode,
+                decoration: InputDecoration(
+                  hintText: hint,
+                  hintStyle:
+                      const TextStyle(color: Color.fromARGB(255, 99, 99, 99)),
+                  enabledBorder: const UnderlineInputBorder(
+                    borderSide:
+                        BorderSide(color: Color.fromARGB(255, 99, 99, 99)),
+                  ),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF003566), width: 2),
+                  ),
+                  errorText: errorText,
+                ),
+                controller: controller,
+                onChanged: onChanged,
+                style: const TextStyle(fontSize: 16),
+              ),
             ),
-            focusedBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(color: Color(0xFF003566), width: 2),
-            ),
-            errorText: errorText,
-          ),
-          controller: controller,
-          onChanged: onChanged,
-          style: TextStyle(
-            color: selectedDate == null
-                ? const Color.fromARGB(255, 99, 99, 99)
-                : const Color(0xFF003566),
           ),
         ),
-      ),
+        IconButton(
+          icon: const Icon(Icons.calendar_today, color: Color(0xFF003566)),
+          onPressed: () {
+            FocusScope.of(context).unfocus();
+            onTap();
+          },
+        ),
+      ],
     );
   }
 
   Widget _buildTextField({
     required TextEditingController controller,
     required String hint,
-    required Function(String) onChanged,
+    required ValueChanged<String> onChanged,
     required FocusNode focusNode,
-    FocusNode? nextFocusNode,
+    required FocusNode nextFocusNode,
     bool isNumeric = false,
+    String? Function(String?)? validator,
+    TextCapitalization? textCapitalization,
   }) {
     return TextFormField(
       controller: controller,
-      onChanged: (value) {
-        if (isNumeric && !value.startsWith('R\$')) {
-          value = 'R\$${value.replaceAll('R\$', '').replaceAll(',', '')}';
-          controller.text = value;
-          controller.selection =
-              TextSelection.fromPosition(TextPosition(offset: value.length));
-        }
-        onChanged(value);
-      },
-      textCapitalization: TextCapitalization.words,
+      onChanged: onChanged,
+      focusNode: focusNode,
+      textInputAction: TextInputAction.next,
+      keyboardType: isNumeric
+          ? const TextInputType.numberWithOptions(decimal: true)
+          : TextInputType.text,
+      textCapitalization: textCapitalization ?? TextCapitalization.none,
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(color: Color.fromARGB(255, 99, 99, 99)),
@@ -339,25 +349,9 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
           borderSide: BorderSide(color: Color(0xFF003566), width: 2),
         ),
       ),
-      cursorColor: const Color(0xFF003566),
-      validator: (value) {
-        if (isNumeric) {
-          final isNumericValid = RegExp(r'^\d*\.?\d*$').hasMatch(value!
-              .replaceAll('R\$', '')
-              .replaceAll('.', '')
-              .replaceAll(',', ''));
-          if (!isNumericValid) {
-            return 'Digite um valor numérico válido';
-          }
-        }
-
-        return value!.isEmpty ? 'Campo obrigatório' : null;
-      },
-      focusNode: focusNode,
-      onFieldSubmitted: (value) {
-        if (nextFocusNode != null) {
-          FocusScope.of(context).requestFocus(nextFocusNode);
-        }
+      validator: validator,
+      onFieldSubmitted: (_) {
+        FocusScope.of(context).requestFocus(nextFocusNode);
       },
     );
   }

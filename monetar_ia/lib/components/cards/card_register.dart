@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:monetar_ia/services/form_validations.dart';
+import 'package:monetar_ia/utils/form_validations.dart';
 
 class CardRegister extends StatefulWidget {
   final TextEditingController nameController;

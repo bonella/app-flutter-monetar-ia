@@ -42,7 +42,7 @@ class _GoalPageState extends State<GoalPage> {
         if (searchTerm != null && searchTerm.isNotEmpty) {
           _filterGoals(searchTerm);
         } else {
-          _filterGoals(''); // Se não houver termo de busca, carrega todas
+          _filterGoals('');
         }
 
         // Filtrando metas até o último dia do mês selecionado
@@ -75,8 +75,7 @@ class _GoalPageState extends State<GoalPage> {
   void _filterGoals(String searchTerm) {
     setState(() {
       if (searchTerm.isEmpty) {
-        filteredGoals =
-            List.from(goals); // Se a busca estiver vazia, mostra todas as metas
+        filteredGoals = List.from(goals);
       } else {
         filteredGoals = goals
             .where((goal) =>
