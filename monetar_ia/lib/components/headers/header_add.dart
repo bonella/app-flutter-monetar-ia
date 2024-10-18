@@ -13,7 +13,7 @@ class HeaderAdd extends StatefulWidget {
   final String label;
   final String value;
   final Function(DateTime) onDateChanged;
-  final Function(String) onSearchGoals;
+  // final Function(String) onSearchGoals;
 
   const HeaderAdd({
     super.key,
@@ -27,7 +27,7 @@ class HeaderAdd extends StatefulWidget {
     required this.label,
     required this.value,
     required this.onDateChanged,
-    required this.onSearchGoals,
+    // required this.onSearchGoals,
   });
 
   @override
@@ -156,7 +156,7 @@ class _HeaderAddState extends State<HeaderAdd> {
                           cursorColor: Colors.white,
                           style: const TextStyle(color: Colors.white),
                           decoration: const InputDecoration(
-                            hintText: 'Buscar metas',
+                            hintText: 'Buscar',
                             hintStyle: TextStyle(color: Colors.white),
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.symmetric(
@@ -164,7 +164,7 @@ class _HeaderAddState extends State<HeaderAdd> {
                             ),
                           ),
                           onChanged: (value) {
-                            widget.onSearchGoals(value);
+                            // widget.onSearchGoals(value);
                           },
                         ),
                       ),

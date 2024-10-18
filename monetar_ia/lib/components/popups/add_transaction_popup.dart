@@ -1,61 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:monetar_ia/services/request_http.dart';
-import 'package:monetar_ia/views/goal_page.dart';
 import 'package:monetar_ia/utils/form_validations.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:monetar_ia/models/category.dart';
 
-class AddGoalPopup extends StatefulWidget {
-  final Function(String, String, String, String, DateTime?) onSave;
+class AddTransactionPopup extends StatefulWidget {
+  final Function(int, String, double, String, String, DateTime?) onSave;
+  final String transactionType;
+  final List<Category> categories;
 
-  const AddGoalPopup({super.key, required this.onSave});
+  const AddTransactionPopup({
+    super.key,
+    required this.onSave,
+    required this.transactionType,
+    required this.categories,
+  });
 
   @override
-  _AddGoalPopupState createState() => _AddGoalPopupState();
+  _AddTransactionPopupState createState() => _AddTransactionPopupState();
 }
 
-class _AddGoalPopupState extends State<AddGoalPopup> {
+class _AddTransactionPopupState extends State<AddTransactionPopup> {
   final _formKey = GlobalKey<FormState>();
-  String name = '';
-  String targetAmount = '';
-  String currentAmount = '';
+  String type = '';
+  String categoryId = '';
   String description = '';
-  DateTime? _deadline;
+  double amount = 0.0;
+  DateTime? transactionDate;
   String? _dateError;
 
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController targetAmountController = TextEditingController();
-  final TextEditingController currentAmountController = TextEditingController();
+  final TextEditingController amountController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
-  final TextEditingController deadlineStringController =
+  final TextEditingController transactionDateStringController =
       TextEditingController();
-
-  final FocusNode nameFocusNode = FocusNode();
-  final FocusNode targetAmountFocusNode = FocusNode();
-  final FocusNode currentAmountFocusNode = FocusNode();
-  final FocusNode descriptionFocusNode = FocusNode();
-  final FocusNode deadlineFocusNode = FocusNode();
 
   final RequestHttp _requestHttp = RequestHttp();
 
+  final FocusNode amountFocusNode = FocusNode();
+  final FocusNode descriptionFocusNode = FocusNode();
+  final FocusNode transactionDateFocusNode = FocusNode();
+
   @override
-  void dispose() {
-    nameController.dispose();
-    targetAmountController.dispose();
-    currentAmountController.dispose();
-    descriptionController.dispose();
-    nameFocusNode.dispose();
-    targetAmountFocusNode.dispose();
-    currentAmountFocusNode.dispose();
-    descriptionFocusNode.dispose();
-    deadlineFocusNode.dispose();
-    deadlineStringController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    type = widget.transactionType;
   }
 
-  final TextStyle errorTextStyle = const TextStyle(
-    color: Color(0xFFB00020),
-    fontSize: 12,
-  );
+  @override
+  void dispose() {
+    amountController.dispose();
+    descriptionController.dispose();
+    transactionDateStringController.dispose();
+    amountFocusNode.dispose();
+    descriptionFocusNode.dispose();
+    transactionDateFocusNode.dispose();
+    super.dispose();
+  }
 
   void showSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -81,10 +83,10 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
             ),
           ),
           const SizedBox(height: 16),
-          const Center(
+          Center(
             child: Text(
-              'Adicionar Meta',
-              style: TextStyle(color: Color(0xFF003566)),
+              type == 'EXPENSE' ? 'Adicionar Despesa' : 'Adicionar Receita',
+              style: const TextStyle(color: Color(0xFF003566)),
             ),
           ),
         ],
@@ -97,52 +99,81 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildTextField(
-                  controller: nameController,
-                  hint: "Nome da meta",
-                  onChanged: (value) => name = value,
-                  focusNode: nameFocusNode,
-                  nextFocusNode: targetAmountFocusNode,
-                  validator: validateGoal,
-                  textCapitalization: TextCapitalization.words,
+                DropdownButtonFormField<String>(
+                  value: categoryId.isEmpty ? null : categoryId,
+                  hint: const Text("Categoria"),
+                  items: widget.categories.map((category) {
+                    return DropdownMenuItem<String>(
+                      value: category.id.toString(),
+                      child: Text(
+                        category.name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Color(0xFF003566),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      categoryId = value ?? '';
+                    });
+                  },
+                  validator: (value) =>
+                      value == null ? 'Categoria é obrigatória' : null,
+                  decoration: const InputDecoration(
+                    hintText: "Selecione a Categoria",
+                    hintStyle:
+                        TextStyle(color: Color.fromARGB(255, 99, 99, 99)),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide:
+                          BorderSide(color: Color.fromARGB(255, 99, 99, 99)),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide:
+                          BorderSide(color: Color(0xFF003566), width: 2),
+                    ),
+                  ),
                 ),
                 _buildTextField(
-                  controller: targetAmountController,
-                  hint: "Valor alvo (R\$)",
-                  onChanged: (value) => targetAmount = value,
-                  focusNode: targetAmountFocusNode,
-                  nextFocusNode: currentAmountFocusNode,
+                  controller: amountController,
+                  focusNode: amountFocusNode,
+                  hint: "Valor (R\$)",
+                  onChanged: (value) {
+                    amount = double.tryParse(value
+                            .replaceAll('R\$', '')
+                            .replaceAll('.', '')
+                            .replaceAll(',', '')) ??
+                        0.0;
+                  },
                   isNumeric: true,
                   validator: validateNumericInput,
-                ),
-                _buildTextField(
-                  controller: currentAmountController,
-                  hint: "Valor atual (R\$)",
-                  onChanged: (value) => currentAmount = value,
-                  focusNode: currentAmountFocusNode,
-                  isNumeric: true,
-                  nextFocusNode: descriptionFocusNode,
-                  validator: validateNumericInput,
+                  onFieldSubmitted: (_) {
+                    FocusScope.of(context).requestFocus(descriptionFocusNode);
+                  },
                 ),
                 _buildTextField(
                   controller: descriptionController,
+                  focusNode: descriptionFocusNode,
                   hint: "Descrição",
                   onChanged: (value) => description = value,
-                  focusNode: descriptionFocusNode,
-                  nextFocusNode: deadlineFocusNode,
                   validator: validateGoal,
                   textCapitalization: TextCapitalization.sentences,
+                  onFieldSubmitted: (_) {
+                    FocusScope.of(context)
+                        .requestFocus(transactionDateFocusNode);
+                  },
                 ),
                 const SizedBox(height: 16),
                 _buildDateField(
-                  hint: _deadline == null
-                      ? "Data Limite"
-                      : DateFormat('dd/MM/yyyy').format(_deadline!),
-                  selectedDate: _deadline,
+                  hint: transactionDate == null
+                      ? "Data da Transação"
+                      : DateFormat('dd/MM/yyyy').format(transactionDate!),
+                  selectedDate: transactionDate,
                   onTap: () async {
                     DateTime? selectedDate = await showDatePicker(
                       context: context,
-                      initialDate: _deadline ?? DateTime.now(),
+                      initialDate: transactionDate ?? DateTime.now(),
                       firstDate: DateTime.now(),
                       lastDate: DateTime(2100),
                       builder: (BuildContext context, Widget? child) {
@@ -158,26 +189,15 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
                     );
                     if (selectedDate != null) {
                       setState(() {
-                        _deadline = selectedDate;
+                        transactionDate = selectedDate;
                         _dateError = null;
-                        deadlineStringController.text =
+                        transactionDateStringController.text =
                             DateFormat('dd/MM/yyyy').format(selectedDate);
                       });
                     }
                   },
-                  focusNode: deadlineFocusNode,
                   errorText: _dateError,
-                  controller: deadlineStringController,
-                  onChanged: (value) {
-                    setState(() {
-                      _dateError = validateDateString(value);
-                      if (_dateError == null) {
-                        _deadline = DateFormat('dd/MM/yyyy').parse(value);
-                      } else {
-                        _deadline = null;
-                      }
-                    });
-                  },
+                  controller: transactionDateStringController,
                 ),
                 const Divider(thickness: 5, color: Colors.grey),
               ],
@@ -190,70 +210,39 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             TextButton(
-              child: const Text(
-                'Cancelar',
-                style: TextStyle(color: Color(0xFF003566)),
-              ),
+              child: const Text('Cancelar',
+                  style: TextStyle(color: Color(0xFF003566))),
               onPressed: () {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const GoalPage()),
-                  (Route<dynamic> route) => false,
-                );
+                Navigator.pop(context);
               },
             ),
             TextButton(
-              child: const Text(
-                'Salvar',
-                style: TextStyle(color: Color(0xFF003566)),
-              ),
+              child: const Text('Salvar',
+                  style: TextStyle(color: Color(0xFF003566))),
               onPressed: () async {
                 if (_formKey.currentState!.validate()) {
                   try {
-                    final goalData = {
+                    final transactionData = {
                       "user_id": 0,
-                      "name": name,
-                      "target_amount": int.tryParse(targetAmount
-                              .replaceAll('R\$', '')
-                              .replaceAll('.', '')
-                              .replaceAll(',', '')) ??
-                          0,
-                      "current_amount": int.tryParse(currentAmount
-                              .replaceAll('R\$', '')
-                              .replaceAll('.', '')
-                              .replaceAll(',', '')) ??
-                          0,
+                      "amount": amount,
+                      "type": type,
+                      "category_id": int.parse(categoryId),
                       "description": description,
-                      "deadline": _deadline?.toIso8601String() ?? '',
+                      "transaction_date":
+                          transactionDate?.toIso8601String() ?? '',
                     };
 
-                    await _requestHttp.createGoal(goalData);
-
-                    showSnackbar('Meta salva com sucesso!');
-                    Navigator.of(context).pop();
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const GoalPage()),
-                    );
-
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (context) => const GoalPage()),
-                      (Route<dynamic> route) => false,
-                    );
+                    await _requestHttp.createTransaction(transactionData);
+                    showSnackbar('Transação salva com sucesso!');
+                    Navigator.pop(context);
                   } catch (error) {
                     showSnackbar(
-                        'Erro ao salvar a meta! \n Tente mais tarde ou verifique os campos digitados.');
-                    Navigator.of(context).pop();
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const GoalPage()),
-                    );
+                        'Erro ao salvar a transação! Tente mais tarde ou verifique os campos digitados.');
                   }
                 } else {
                   setState(() {
                     _dateError =
-                        _deadline == null ? 'Data é obrigatório' : null;
+                        transactionDate == null ? 'Data é obrigatória' : null;
                   });
                 }
               },
@@ -271,10 +260,8 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
     required String hint,
     DateTime? selectedDate,
     required VoidCallback onTap,
-    required FocusNode focusNode,
     String? errorText,
     required TextEditingController controller,
-    required Function(String) onChanged,
   }) {
     return Row(
       children: [
@@ -286,7 +273,6 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
             },
             child: AbsorbPointer(
               child: TextFormField(
-                focusNode: focusNode,
                 decoration: InputDecoration(
                   hintText: hint,
                   hintStyle:
@@ -301,7 +287,6 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
                   errorText: errorText,
                 ),
                 controller: controller,
-                onChanged: onChanged,
                 style: const TextStyle(fontSize: 16),
               ),
             ),
@@ -322,21 +307,19 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
     required TextEditingController controller,
     required String hint,
     required ValueChanged<String> onChanged,
-    required FocusNode focusNode,
-    required FocusNode nextFocusNode,
+    FocusNode? focusNode,
     bool isNumeric = false,
     String? Function(String?)? validator,
-    TextCapitalization? textCapitalization,
+    TextCapitalization textCapitalization = TextCapitalization.none,
+    ValueChanged<String>? onFieldSubmitted,
   }) {
     return TextFormField(
       controller: controller,
       onChanged: onChanged,
-      focusNode: focusNode,
-      textInputAction: TextInputAction.next,
       keyboardType: isNumeric
           ? const TextInputType.numberWithOptions(decimal: true)
           : TextInputType.text,
-      textCapitalization: textCapitalization ?? TextCapitalization.none,
+      textCapitalization: textCapitalization,
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(color: Color.fromARGB(255, 99, 99, 99)),
@@ -344,13 +327,12 @@ class _AddGoalPopupState extends State<AddGoalPopup> {
           borderSide: BorderSide(color: Color.fromARGB(255, 99, 99, 99)),
         ),
         focusedBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.black, width: 2),
+          borderSide: BorderSide(color: Color(0xFF003566), width: 2),
         ),
       ),
       validator: validator,
-      onFieldSubmitted: (_) {
-        FocusScope.of(context).requestFocus(nextFocusNode);
-      },
+      focusNode: focusNode,
+      onFieldSubmitted: onFieldSubmitted,
     );
   }
 }

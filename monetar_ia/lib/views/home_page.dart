@@ -5,17 +5,15 @@ import 'package:monetar_ia/components/boxes/info_box.dart';
 import 'package:monetar_ia/components/graphics/line_graphic.dart';
 import 'package:monetar_ia/components/graphics/pie_chart.dart';
 import 'package:monetar_ia/components/graphics/column_chart.dart';
-import 'package:monetar_ia/views/expense_page.dart';
 import 'package:monetar_ia/views/goal_page.dart';
 import 'package:monetar_ia/views/profile_page.dart';
-import 'package:monetar_ia/views/revenue_page.dart';
 import 'package:monetar_ia/views/voice_page.dart';
 import 'package:monetar_ia/components/buttons/round_btn.dart';
 import 'package:monetar_ia/components/cards/white_card.dart';
 import 'package:monetar_ia/components/footers/footer.dart';
 import 'package:monetar_ia/views/login.dart';
 import 'package:monetar_ia/components/buttons/date_btn.dart';
-import 'package:monetar_ia/models/goal.dart'; // Certifique-se de que a importação do modelo Goal esteja correta
+import 'package:monetar_ia/models/goal.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -26,11 +24,23 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   DateTime selectedDate = DateTime.now();
+  String userName = '';
 
   @override
   void initState() {
     super.initState();
     _showStayConnectedDialog();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? name =
+        prefs.getString('userName'); // Supondo que você salvou o nome aqui
+    setState(() {
+      userName =
+          name ?? 'Usuário'; // Define um valor padrão caso o nome não exista
+    });
   }
 
   Future<void> _showStayConnectedDialog() async {
@@ -107,28 +117,26 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // Criação de instâncias de Goal
     Goal totalMonthGoal = Goal(
       id: 1,
-      userId: 123, // Use o ID real do usuário
-      name: 'Total do mês de agosto', // Nome descritivo
-      targetAmount: 10000.0, // Meta total
-      currentAmount:
-          2500.0, // Quantia atual (pode ser de uma variável ou valor fixo)
-      description: 'Descrição da meta total do mês', // Descrição opcional
-      deadline: DateTime.parse('2024-08-31'), // Data limite
-      createdAt: DateTime.now(), // Data de criação, use o tempo atual
+      userId: 123,
+      name: 'Total do mês',
+      targetAmount: 10000.0,
+      currentAmount: 2500.0,
+      description: 'Descrição da meta total do mês',
+      deadline: DateTime.parse('2024-08-31'),
+      createdAt: DateTime.now(),
     );
 
     Goal currentGoal = Goal(
       id: 2,
-      userId: 123, // Use o ID real do usuário
-      name: 'Meta atual', // Nome descritivo
-      targetAmount: 5000.0, // Meta total
-      currentAmount: 3000.0, // Quantia atual
-      description: 'Descrição da meta atual', // Descrição opcional
-      deadline: DateTime.parse('2024-12-31'), // Data limite
-      createdAt: DateTime.now(), // Data de criação
+      userId: 123,
+      name: 'Meta atual',
+      targetAmount: 5000.0,
+      currentAmount: 3000.0,
+      description: 'Descrição da meta atual',
+      deadline: DateTime.parse('2024-12-31'),
+      createdAt: DateTime.now(),
     );
 
     return WillPopScope(
@@ -141,6 +149,7 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 children: [
                   HeaderHome(
+                    name: userName,
                     dateButton: DateButton(
                       onDateChanged: (DateTime newDate) {
                         setState(() {
@@ -156,19 +165,37 @@ class _HomePageState extends State<HomePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          const SizedBox(height: 16),
                           WhiteCard(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(
-                                    vertical: 16.0,
-                                    horizontal: 16.0,
-                                  ),
-                                  child: Column(
-                                    children: [],
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16.0, vertical: 8.0),
+                                  child: InfoBox(
+                                    item: totalMonthGoal,
+                                    title: totalMonthGoal.name,
+                                    description: '',
+                                    creationDate: totalMonthGoal.createdAt
+                                        .toIso8601String(),
+                                    // goal: totalMonthGoal,
                                   ),
                                 ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16.0, vertical: 8.0),
+                                  child: InfoBox(
+                                    item: totalMonthGoal,
+                                    title: currentGoal.name,
+                                    description: '',
+                                    creationDate:
+                                        currentGoal.createdAt.toIso8601String(),
+                                    // goal: currentGoal,
+                                  ),
+                                ),
+                                const SizedBox(
+                                    height: 8), // Espaço entre os InfoBoxes
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 16.0),
@@ -186,22 +213,9 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: 32),
                               ],
                             ),
-                          ),
-                          // Passando as instâncias de Goal para InfoBox
-                          InfoBox(
-                            title: totalMonthGoal.name,
-                            description: 'totalMonthGoal.description',
-                            creationDate: totalMonthGoal.creationDate,
-                            goal: totalMonthGoal, // Primeiro InfoBox
-                          ),
-                          InfoBox(
-                            title: totalMonthGoal.name,
-                            description: 'totalMonthGoal.description',
-                            creationDate: totalMonthGoal.creationDate,
-                            goal: totalMonthGoal,
                           ),
                         ],
                       ),
@@ -214,47 +228,11 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             Positioned(
-              bottom: 30,
-              left: 16,
               right: 16,
+              bottom: 5,
+              left: 16,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  RoundButton(
-                    icon: Icons.mic,
-                    backgroundColor: Colors.white,
-                    borderColor: const Color(0xFF3D5936),
-                    iconColor: const Color(0xFF3D5936),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const VoicePage(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const Positioned(
-              height: 50,
-              bottom: 5,
-              left: 16,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  SizedBox(width: 32),
-                ],
-              ),
-            ),
-            Positioned(
-              height: 50,
-              bottom: 5,
-              right: 16,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   GestureDetector(
@@ -307,6 +285,30 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ],
                     ),
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              bottom: 30,
+              left: 16,
+              right: 16,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  RoundButton(
+                    icon: Icons.mic,
+                    backgroundColor: Colors.white,
+                    borderColor: const Color(0xFF3D5936),
+                    iconColor: const Color(0xFF3D5936),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const VoicePage(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
