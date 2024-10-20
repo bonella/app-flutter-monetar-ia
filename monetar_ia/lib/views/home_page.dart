@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:monetar_ia/components/headers/header_home.dart';
@@ -14,6 +15,9 @@ import 'package:monetar_ia/components/footers/footer.dart';
 import 'package:monetar_ia/views/login.dart';
 import 'package:monetar_ia/components/buttons/date_btn.dart';
 import 'package:monetar_ia/models/goal.dart';
+import 'package:monetar_ia/models/transaction.dart';
+import 'package:monetar_ia/services/request_http.dart';
+import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -25,22 +29,64 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   DateTime selectedDate = DateTime.now();
   String userName = '';
+  Transaction? lastTransaction;
+  Goal? lastGoal;
+  final RequestHttp _requestHttp = RequestHttp();
 
   @override
   void initState() {
     super.initState();
     _showStayConnectedDialog();
     _loadUserName();
+    _loadLatestTransaction();
+    ();
+    _loadLastGoal();
   }
 
   Future<void> _loadUserName() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? name =
-        prefs.getString('userName'); // Supondo que você salvou o nome aqui
+    String? name = prefs.getString('userName');
     setState(() {
-      userName =
-          name ?? 'Usuário'; // Define um valor padrão caso o nome não exista
+      userName = name ?? 'Usuário';
     });
+  }
+
+  Future<void> _loadLatestTransaction() async {
+    try {
+      var response = await _requestHttp.get('/transactions');
+      if (response.statusCode == 200) {
+        List<dynamic> decodedResponse = json.decode(response.body);
+
+        List<Transaction> transactions =
+            decodedResponse.map((data) => Transaction.fromJson(data)).toList();
+
+        if (transactions.isNotEmpty) {
+          lastTransaction = transactions.reduce(
+              (a, b) => a.transactionDate.isAfter(b.transactionDate) ? a : b);
+
+          setState(() {});
+        } else {
+          print('Nenhuma transação encontrada.');
+        }
+      } else {
+        print('Erro ao carregar as transações: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Erro ao carregar as transações: $e');
+    }
+  }
+
+  Future<void> _loadLastGoal() async {
+    try {
+      var response = await _requestHttp.get('goals?limit=1');
+      if (response.statusCode == 200) {
+        var decodedResponse = json.decode(response.body);
+        lastGoal = Goal.fromJson(decodedResponse[0]);
+        setState(() {});
+      }
+    } catch (e) {
+      print('Erro ao carregar a última meta: $e');
+    }
   }
 
   Future<void> _showStayConnectedDialog() async {
@@ -117,28 +163,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    Goal totalMonthGoal = Goal(
-      id: 1,
-      userId: 123,
-      name: 'Total do mês',
-      targetAmount: 10000.0,
-      currentAmount: 2500.0,
-      description: 'Descrição da meta total do mês',
-      deadline: DateTime.parse('2024-08-31'),
-      createdAt: DateTime.now(),
-    );
-
-    Goal currentGoal = Goal(
-      id: 2,
-      userId: 123,
-      name: 'Meta atual',
-      targetAmount: 5000.0,
-      currentAmount: 3000.0,
-      description: 'Descrição da meta atual',
-      deadline: DateTime.parse('2024-12-31'),
-      createdAt: DateTime.now(),
-    );
-
     return WillPopScope(
       onWillPop: () => _onWillPop(context),
       child: Scaffold(
@@ -174,28 +198,34 @@ class _HomePageState extends State<HomePage> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 16.0, vertical: 8.0),
                                   child: InfoBox(
-                                    item: totalMonthGoal,
-                                    title: totalMonthGoal.name,
-                                    description: '',
-                                    creationDate: totalMonthGoal.createdAt
-                                        .toIso8601String(),
-                                    // goal: totalMonthGoal,
+                                    item: lastTransaction,
+                                    title: lastTransaction?.description ??
+                                        'Último Registro',
+                                    description: lastTransaction != null
+                                        ? 'R\$ ${lastTransaction!.amount.toStringAsFixed(2)}'
+                                        : '',
+                                    creationDate: lastTransaction != null
+                                        ? DateFormat('dd/MM/yyyy').format(
+                                            lastTransaction!.transactionDate)
+                                        : 'Data não disponível',
                                   ),
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 16.0, vertical: 8.0),
                                   child: InfoBox(
-                                    item: totalMonthGoal,
-                                    title: currentGoal.name,
-                                    description: '',
-                                    creationDate:
-                                        currentGoal.createdAt.toIso8601String(),
-                                    // goal: currentGoal,
+                                    item: lastGoal,
+                                    title: lastGoal?.name ?? 'Última Meta',
+                                    description: lastGoal != null
+                                        ? 'R\$ ${lastGoal!.currentAmount.toStringAsFixed(2)} / ${lastGoal!.targetAmount.toStringAsFixed(2)} (${((lastGoal!.currentAmount / lastGoal!.targetAmount) * 100).toStringAsFixed(0)}%)'
+                                        : '',
+                                    creationDate: lastGoal != null
+                                        ? DateFormat('dd/MM/yyyy')
+                                            .format(lastGoal!.createdAt)
+                                        : 'Data não disponível',
                                   ),
                                 ),
-                                const SizedBox(
-                                    height: 8), // Espaço entre os InfoBoxes
+                                const SizedBox(height: 8),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 16.0),

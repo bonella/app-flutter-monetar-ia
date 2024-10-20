@@ -9,8 +9,8 @@ import 'package:monetar_ia/components/buttons/round_btn.dart';
 import 'package:monetar_ia/models/transaction.dart';
 import 'package:monetar_ia/models/category.dart';
 import 'package:monetar_ia/services/request_http.dart';
-// import 'package:monetar_ia/services/token_storage.dart';
 import 'package:monetar_ia/components/popups/add_transaction_popup.dart';
+import 'package:monetar_ia/components/popups/transaction_detail_popup.dart';
 
 class ExpensePage extends StatefulWidget {
   const ExpensePage({super.key});
@@ -22,6 +22,7 @@ class ExpensePage extends StatefulWidget {
 class _ExpensePageState extends State<ExpensePage> {
   DateTime selectedDate = DateTime.now();
   List<Transaction> expenses = [];
+  List<Transaction> filteredExpenses = [];
   List<Category> categories = [];
   final RequestHttp _requestHttp = RequestHttp();
   bool _isLoading = true;
@@ -30,7 +31,7 @@ class _ExpensePageState extends State<ExpensePage> {
   void initState() {
     super.initState();
     _loadExpenses();
-    _loadCategories();
+    loadCategories();
   }
 
   void _onPrevMonth() {
@@ -54,20 +55,23 @@ class _ExpensePageState extends State<ExpensePage> {
     });
   }
 
-  Future<void> _loadCategories() async {
+  Future<List<Category>> loadCategories() async {
+    String formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate);
+
     try {
-      var response = await _requestHttp.get('categories/');
+      var response = await _requestHttp.get('categories?date=$formattedDate');
+
       if (response.statusCode == 200) {
-        setState(() {
-          categories = (json.decode(response.body) as List)
-              .map((category) => Category.fromJson(category))
-              .toList();
-        });
+        var decodedResponse = utf8.decode(response.bodyBytes);
+        return (json.decode(decodedResponse) as List)
+            .map((category) => Category.fromJson(category))
+            .toList();
       } else {
-        throw Exception('Falha ao carregar categorias');
+        throw Exception('Falha ao carregar categorias: ${response.statusCode}');
       }
     } catch (e) {
-      print('Erro ao carregar categorias: $e');
+      _showErrorSnackbar('Erro ao carregar categorias: $e');
+      return [];
     }
   }
 
@@ -79,31 +83,52 @@ class _ExpensePageState extends State<ExpensePage> {
     String formattedDate = DateFormat('yyyy-MM').format(selectedDate);
 
     try {
-      var response = await _requestHttp.get('transactions?date=$formattedDate');
-
+      var response = await _requestHttp
+          .get('transactions?type=EXPENSE&date=$formattedDate');
       if (response.statusCode == 200) {
         setState(() {
           expenses = (json.decode(response.body) as List)
               .map((expense) => Transaction.fromJson(expense))
               .toList();
+
+          expenses
+              .sort((a, b) => b.transactionDate.compareTo(a.transactionDate));
+
+          filteredExpenses = List.from(expenses);
           _isLoading = false;
         });
       } else {
+        _showErrorSnackbar('Erro ao carregar despesas: ${response.statusCode}');
         setState(() {
           _isLoading = false;
         });
-        print('Erro ao carregar despesas: ${response.statusCode}');
       }
     } catch (e) {
+      _showErrorSnackbar('Erro: $e');
       setState(() {
         _isLoading = false;
       });
-      print('Erro: $e');
     }
   }
 
+  void _filterExpenses(String searchTerm) {
+    setState(() {
+      if (searchTerm.isEmpty) {
+        filteredExpenses = List.from(expenses);
+      } else {
+        filteredExpenses = expenses
+            .where((expense) =>
+                expense.description != null &&
+                expense.description!
+                    .toLowerCase()
+                    .contains(searchTerm.toLowerCase()))
+            .toList();
+      }
+    });
+  }
+
   double _calculateTotalExpenses() {
-    return expenses.fold(0.0, (sum, expense) => sum + expense.amount);
+    return filteredExpenses.fold(0.0, (sum, expense) => sum + expense.amount);
   }
 
   void _showAddTransactionPopup() {
@@ -111,35 +136,78 @@ class _ExpensePageState extends State<ExpensePage> {
       context: context,
       builder: (context) {
         return AddTransactionPopup(
-          categories: categories,
-          onSave: (userId, type, amount, categoryId, description,
-              transactionDate) async {
-            if (transactionDate == null) {
-              print('Data da transação não pode ser nula.');
-              return;
-            }
-
-            Map<String, dynamic> transactionData = {
-              'user_id': userId,
-              'amount': amount,
-              'type': type,
-              'category_id': categoryId,
-              'description': description,
-              'transaction_date': transactionDate.toIso8601String(),
-            };
-
-            try {
-              await _requestHttp.createTransaction(transactionData);
-              _loadExpenses();
-              Navigator.of(context).pop();
-            } catch (e) {
-              print('Erro ao salvar transação: $e');
-            }
+          onSave:
+              (userId, amount, categoryId, description, transactionDate, type) {
+            _loadExpenses();
           },
           transactionType: 'EXPENSE',
+          loadCategories: loadCategories,
         );
       },
     );
+  }
+
+  void _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _showTransactionDetailPopup(
+      BuildContext context, Transaction transaction) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return TransactionDetailPopup(
+          transaction: transaction,
+          onUpdate:
+              (userId, type, amount, categoryId, description, transactionDate) {
+            int parsedCategoryId = int.tryParse(categoryId) ?? -1;
+
+            if (type != 'INCOME' && type != 'EXPENSE') {
+              _showErrorSnackbar('Tipo inválido. Deve ser INCOME ou EXPENSE.');
+              return;
+            }
+
+            _requestHttp.put('transactions/${transaction.id}', {
+              'user_id': userId,
+              'type': type,
+              'amount': amount,
+              'category_id': parsedCategoryId,
+              'description': description,
+              'transaction_date': transactionDate.toIso8601String(),
+            }).then((response) {
+              if (response.statusCode == 200) {
+                _loadExpenses();
+              } else {
+                _showErrorSnackbar(
+                    'Erro ao atualizar transação: ${response.statusCode}');
+              }
+            }).catchError((e) {
+              _showErrorSnackbar('Erro ao atualizar transação: $e');
+            });
+          },
+          onDelete: (String transactionId) {
+            _deleteTransaction(transactionId);
+          },
+          loadCategories: loadCategories,
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteTransaction(String transactionId) async {
+    try {
+      var response = await _requestHttp.delete('transactions/$transactionId');
+      if (response.statusCode == 200) {
+        _loadExpenses();
+        _showErrorSnackbar('Transação excluída com sucesso.');
+      } else {
+        _showErrorSnackbar(
+            'Erro ao excluir a transação: ${response.statusCode}');
+      }
+    } catch (e) {
+      _showErrorSnackbar('Erro ao excluir a transação: $e');
+    }
   }
 
   @override
@@ -164,11 +232,12 @@ class _ExpensePageState extends State<ExpensePage> {
                 circleBackgroundColor: const Color(0xFF8C1C03),
                 label: 'Despesas de $monthDisplay',
                 value: 'R\$ ${_calculateTotalExpenses().toStringAsFixed(2)}',
+                onSearch: _filterExpenses,
               ),
               Expanded(
                 child: _isLoading
                     ? const Center(child: CircularProgressIndicator())
-                    : expenses.isEmpty
+                    : filteredExpenses.isEmpty
                         ? Stack(
                             children: [
                               Positioned.fill(
@@ -193,10 +262,17 @@ class _ExpensePageState extends State<ExpensePage> {
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 16.0),
                                     child: Column(
-                                      children: expenses.map((expense) {
-                                        return Column(
-                                          children: [
-                                            InfoBox(
+                                      children: filteredExpenses.map((expense) {
+                                        return GestureDetector(
+                                          behavior: HitTestBehavior.translucent,
+                                          onTap: () {
+                                            _showTransactionDetailPopup(
+                                                context, expense);
+                                          },
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 8.0),
+                                            child: InfoBox(
                                               item: expense,
                                               title: expense.description ??
                                                   'Despesa',
@@ -210,8 +286,7 @@ class _ExpensePageState extends State<ExpensePage> {
                                               badgeColor:
                                                   const Color(0xFF8C1C03),
                                             ),
-                                            const SizedBox(height: 16),
-                                          ],
+                                          ),
                                         );
                                       }).toList(),
                                     ),

@@ -2,20 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:monetar_ia/services/request_http.dart';
 import 'package:monetar_ia/utils/form_validations.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:monetar_ia/models/category.dart';
+import 'package:monetar_ia/views/revenue_page.dart';
+import 'package:monetar_ia/views/expense_page.dart';
 
 class AddTransactionPopup extends StatefulWidget {
   final Function(int, String, double, String, String, DateTime?) onSave;
   final String transactionType;
-  final List<Category> categories;
+  final Future<List<Category>> Function() loadCategories;
 
   const AddTransactionPopup({
     super.key,
     required this.onSave,
     required this.transactionType,
-    required this.categories,
+    required this.loadCategories,
   });
 
   @override
@@ -30,6 +30,7 @@ class _AddTransactionPopupState extends State<AddTransactionPopup> {
   double amount = 0.0;
   DateTime? transactionDate;
   String? _dateError;
+  List<Category> categories = [];
 
   final TextEditingController amountController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
@@ -45,7 +46,19 @@ class _AddTransactionPopupState extends State<AddTransactionPopup> {
   @override
   void initState() {
     super.initState();
+    _fetchCategories();
+
     type = widget.transactionType;
+  }
+
+  Future<void> _fetchCategories() async {
+    try {
+      categories = await widget.loadCategories();
+      setState(() {});
+    } catch (e) {
+      print('Erro ao carregar categorias: $e');
+      showSnackbar('Erro ao carregar categorias. Tente novamente mais tarde.');
+    }
   }
 
   @override
@@ -102,14 +115,15 @@ class _AddTransactionPopupState extends State<AddTransactionPopup> {
                 DropdownButtonFormField<String>(
                   value: categoryId.isEmpty ? null : categoryId,
                   hint: const Text("Categoria"),
-                  items: widget.categories.map((category) {
+                  items: categories.map((category) {
                     return DropdownMenuItem<String>(
                       value: category.id.toString(),
                       child: Text(
                         category.name,
                         style: const TextStyle(
                           fontSize: 16,
-                          color: Color(0xFF003566),
+                          color: Colors.black,
+                          fontWeight: FontWeight.normal,
                         ),
                       ),
                     );
@@ -222,8 +236,22 @@ class _AddTransactionPopupState extends State<AddTransactionPopup> {
               onPressed: () async {
                 if (_formKey.currentState!.validate()) {
                   try {
+                    if (transactionDate == null) {
+                      setState(() {
+                        _dateError = 'Data é obrigatória';
+                      });
+                      return;
+                    }
+
+                    final userId = await _requestHttp.getUserId();
+                    if (userId == null) {
+                      showSnackbar(
+                          'Erro ao obter o ID do usuário. Tente novamente.');
+                      return;
+                    }
+
                     final transactionData = {
-                      "user_id": 0,
+                      "user_id": userId,
                       "amount": amount,
                       "type": type,
                       "category_id": int.parse(categoryId),
@@ -232,10 +260,27 @@ class _AddTransactionPopupState extends State<AddTransactionPopup> {
                           transactionDate?.toIso8601String() ?? '',
                     };
 
+                    print('Dados da transação: $transactionData');
+
                     await _requestHttp.createTransaction(transactionData);
                     showSnackbar('Transação salva com sucesso!');
-                    Navigator.pop(context);
+                    Navigator.of(context).pop();
+
+                    if (type == 'EXPENSE') {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const ExpensePage()),
+                      );
+                    } else {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const RevenuePage()),
+                      );
+                    }
                   } catch (error) {
+                    print('Erro 2: $error');
                     showSnackbar(
                         'Erro ao salvar a transação! Tente mais tarde ou verifique os campos digitados.');
                   }

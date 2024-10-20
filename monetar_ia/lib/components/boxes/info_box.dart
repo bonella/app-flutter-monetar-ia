@@ -4,7 +4,7 @@ import 'package:monetar_ia/models/goal.dart';
 import 'package:monetar_ia/models/transaction.dart';
 
 class InfoBox extends StatelessWidget {
-  final dynamic item; // Pode ser uma Meta (Goal) ou uma Transação (Transaction)
+  final dynamic item;
   final String title;
   final String description;
   final bool showBadge;
@@ -35,20 +35,15 @@ class InfoBox extends StatelessWidget {
             builder: (BuildContext context) {
               return GoalDetailPopup(
                 goal: item,
-                onEdit: (updatedGoal) {
-                  // Lógica para editar a meta
-                },
-                onDelete: (goalId) {
-                  // Lógica para excluir a meta
-                },
+                onEdit: (updatedGoal) {},
+                onDelete: (goalId) {},
               );
             },
           );
         }
-        // Aqui você pode adicionar um comportamento específico para transações, se necessário
       },
       child: Container(
-        width: 361,
+        width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         decoration: BoxDecoration(
           color: Colors.white,

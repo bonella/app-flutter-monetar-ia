@@ -13,7 +13,7 @@ class HeaderAdd extends StatefulWidget {
   final String label;
   final String value;
   final Function(DateTime) onDateChanged;
-  // final Function(String) onSearchGoals;
+  final Function(String) onSearch;
 
   const HeaderAdd({
     super.key,
@@ -27,7 +27,7 @@ class HeaderAdd extends StatefulWidget {
     required this.label,
     required this.value,
     required this.onDateChanged,
-    // required this.onSearchGoals,
+    required this.onSearch,
   });
 
   @override
@@ -59,8 +59,19 @@ class _HeaderAddState extends State<HeaderAdd> {
         ),
         child: Column(
           children: [
+            const Padding(
+              padding: EdgeInsets.only(top: 40.0),
+              child: Text(
+                'Monetar.IA',
+                style: TextStyle(
+                  fontFamily: 'Kumbh Sans',
+                  fontSize: 32,
+                  color: Colors.white,
+                ),
+              ),
+            ),
             Padding(
-              padding: const EdgeInsets.only(top: 36.0),
+              padding: const EdgeInsets.only(top: 0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -146,10 +157,7 @@ class _HeaderAddState extends State<HeaderAdd> {
                           border: const Border(
                             left: BorderSide(color: Colors.white, width: 2),
                             bottom: BorderSide(color: Colors.white, width: 2),
-                            // right: BorderSide(color: Colors.white, width: 2),
-                            // top: BorderSide(color: Color(0xFF003566), width: 2),
                           ),
-                          // color: Colors.white,
                         ),
                         child: TextField(
                           controller: _searchController,
@@ -164,7 +172,7 @@ class _HeaderAddState extends State<HeaderAdd> {
                             ),
                           ),
                           onChanged: (value) {
-                            // widget.onSearchGoals(value);
+                            widget.onSearch(value);
                           },
                         ),
                       ),

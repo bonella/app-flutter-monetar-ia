@@ -53,6 +53,18 @@ class RequestHttp {
     return _handleResponse(response);
   }
 
+  // Método para obter o user_id
+  Future<int?> getUserId() async {
+    final response = await get('me');
+    if (response.statusCode == 200) {
+      final userData = json.decode(response.body);
+      return userData['id'];
+    } else {
+      print('Erro ao obter informações do usuário: ${response.statusCode}');
+      return null;
+    }
+  }
+
   // Métodos HTTP públicos
   Future<http.Response> get(String endpoint) async {
     return await _requestWithToken('GET', endpoint);
@@ -149,7 +161,8 @@ class RequestHttp {
   // Obter todas as categorias
   Future<List<Category>> getCategories({int skip = 0, int limit = 10}) async {
     final response = await get('categories?skip=$skip&limit=$limit');
-    return parseCategories(response.body);
+    final decodedBody = utf8.decode(response.bodyBytes);
+    return parseCategories(decodedBody);
   }
 
   // Método para converter o JSON da resposta em uma lista de Categorias

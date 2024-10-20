@@ -171,7 +171,7 @@ class _GoalPageState extends State<GoalPage> {
                     circleBackgroundColor: const Color(0xFF003566),
                     label: 'Metas até $monthDisplay',
                     value: 'R\$ ${_calculateTotalGoals().toStringAsFixed(2)}',
-                    // onSearchGoals: _filterGoals,
+                    onSearch: _filterGoals,
                   ),
                   Expanded(
                     child: _isLoading

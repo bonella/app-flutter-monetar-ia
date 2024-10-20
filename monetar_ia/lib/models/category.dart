@@ -11,7 +11,11 @@ class Category {
     required this.name,
     required this.type,
     this.userId,
-  });
+  }) {
+    if (type != 'INCOME' && type != 'EXPENSE') {
+      throw ArgumentError('Invalid category type: $type');
+    }
+  }
 
   factory Category.fromJson(Map<String, dynamic> json) {
     return Category(
@@ -29,5 +33,24 @@ class Category {
       'type': type,
       'user_id': userId,
     };
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is Category &&
+        other.id == id &&
+        other.name == name &&
+        other.type == type &&
+        other.userId == userId;
+  }
+
+  @override
+  int get hashCode {
+    return id.hashCode ^
+        name.hashCode ^
+        type.hashCode ^
+        (userId?.hashCode ?? 0);
   }
 }

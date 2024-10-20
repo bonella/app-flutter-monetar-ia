@@ -25,7 +25,19 @@ class Transaction {
 
   // Getter para formatar a data da transação
   String get formattedTransactionDate {
-    return DateFormat('dd/MM/yyyy HH:mm').format(transactionDate);
+    return DateFormat('dd/MM/yyyy').format(transactionDate);
+  }
+
+  // Método para formatar o tipo
+  String get formattedType {
+    switch (type) {
+      case 'INCOME':
+        return 'Receitas';
+      case 'EXPENSE':
+        return 'Despesas';
+      default:
+        return type; // Retorna como está se não houver mapeamento
+    }
   }
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
@@ -53,6 +65,7 @@ class Transaction {
       'category_id': categoryId,
       'description': description,
       'transaction_date': transactionDate.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
     };
   }
 }

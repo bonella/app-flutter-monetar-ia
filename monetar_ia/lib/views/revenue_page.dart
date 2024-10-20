@@ -10,6 +10,7 @@ import 'package:monetar_ia/models/transaction.dart';
 import 'package:monetar_ia/models/category.dart';
 import 'package:monetar_ia/services/request_http.dart';
 import 'package:monetar_ia/components/popups/add_transaction_popup.dart';
+import 'package:monetar_ia/components/popups/transaction_detail_popup.dart';
 
 class RevenuePage extends StatefulWidget {
   const RevenuePage({super.key});
@@ -21,6 +22,7 @@ class RevenuePage extends StatefulWidget {
 class _RevenuePageState extends State<RevenuePage> {
   DateTime selectedDate = DateTime.now();
   List<Transaction> revenues = [];
+  List<Transaction> filteredRevenues = [];
   List<Category> categories = [];
   final RequestHttp _requestHttp = RequestHttp();
   bool _isLoading = true;
@@ -29,7 +31,7 @@ class _RevenuePageState extends State<RevenuePage> {
   void initState() {
     super.initState();
     _loadRevenues();
-    _loadCategories();
+    loadCategories();
   }
 
   void _onPrevMonth() {
@@ -53,21 +55,23 @@ class _RevenuePageState extends State<RevenuePage> {
     });
   }
 
-  Future<void> _loadCategories() async {
+  Future<List<Category>> loadCategories() async {
+    String formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate);
+
     try {
-      var response = await _requestHttp.get('categories');
+      var response = await _requestHttp.get('categories?date=$formattedDate');
+
       if (response.statusCode == 200) {
-        setState(() {
-          categories = (json.decode(response.body) as List)
-              .map((category) => Category.fromJson(category))
-              .toList();
-        });
+        var decodedResponse = utf8.decode(response.bodyBytes);
+        return (json.decode(decodedResponse) as List)
+            .map((category) => Category.fromJson(category))
+            .toList();
       } else {
-        _showErrorSnackbar(
-            'Falha ao carregar categorias: ${response.statusCode}');
+        throw Exception('Falha ao carregar categorias: ${response.statusCode}');
       }
     } catch (e) {
       _showErrorSnackbar('Erro ao carregar categorias: $e');
+      return [];
     }
   }
 
@@ -86,6 +90,11 @@ class _RevenuePageState extends State<RevenuePage> {
           revenues = (json.decode(response.body) as List)
               .map((revenue) => Transaction.fromJson(revenue))
               .toList();
+
+          revenues
+              .sort((a, b) => b.transactionDate.compareTo(a.transactionDate));
+
+          filteredRevenues = List.from(revenues);
           _isLoading = false;
         });
       } else {
@@ -102,8 +111,24 @@ class _RevenuePageState extends State<RevenuePage> {
     }
   }
 
+  void _filterRevenues(String searchTerm) {
+    setState(() {
+      if (searchTerm.isEmpty) {
+        filteredRevenues = List.from(revenues);
+      } else {
+        filteredRevenues = revenues
+            .where((revenue) =>
+                revenue.description != null &&
+                revenue.description!
+                    .toLowerCase()
+                    .contains(searchTerm.toLowerCase()))
+            .toList();
+      }
+    });
+  }
+
   double _calculateTotalRevenues() {
-    return revenues.fold(0.0, (sum, revenue) => sum + revenue.amount);
+    return filteredRevenues.fold(0.0, (sum, revenue) => sum + revenue.amount);
   }
 
   void _showAddTransactionPopup() {
@@ -111,12 +136,12 @@ class _RevenuePageState extends State<RevenuePage> {
       context: context,
       builder: (context) {
         return AddTransactionPopup(
-          categories: categories,
           onSave:
-              (userId, type, amount, categoryId, description, transactionDate) {
+              (userId, amount, categoryId, description, transactionDate, type) {
             _loadRevenues();
           },
           transactionType: 'INCOME',
+          loadCategories: loadCategories,
         );
       },
     );
@@ -125,6 +150,72 @@ class _RevenuePageState extends State<RevenuePage> {
   void _showErrorSnackbar(String message) {
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _showTransactionDetailPopup(
+      BuildContext context, Transaction transaction) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return TransactionDetailPopup(
+          transaction: transaction,
+          onUpdate:
+              (userId, type, amount, categoryId, description, transactionDate) {
+            print('Updating transaction with:');
+            print('userId: $userId');
+            print('type: $type');
+            print('amount: $amount');
+            print('categoryId: $categoryId');
+            print('description: $description');
+            print('transactionDate: $transactionDate');
+
+            int parsedCategoryId = int.tryParse(categoryId) ?? -1;
+
+            if (type != 'INCOME' && type != 'EXPENSE') {
+              _showErrorSnackbar('Tipo inválido. Deve ser INCOME ou EXPENSE.');
+              return;
+            }
+
+            _requestHttp.put('transactions/${transaction.id}', {
+              'user_id': userId,
+              'type': type,
+              'amount': amount,
+              'category_id': parsedCategoryId,
+              'description': description,
+              'transaction_date': transactionDate.toIso8601String(),
+            }).then((response) {
+              if (response.statusCode == 200) {
+                _loadRevenues();
+              } else {
+                _showErrorSnackbar(
+                    'Erro ao atualizar transação: ${response.statusCode}');
+              }
+            }).catchError((e) {
+              _showErrorSnackbar('Erro ao atualizar transação: $e');
+            });
+          },
+          onDelete: (String transactionId) {
+            _deleteTransaction(transactionId);
+          },
+          loadCategories: loadCategories,
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteTransaction(String transactionId) async {
+    try {
+      var response = await _requestHttp.delete('transactions/$transactionId');
+      if (response.statusCode == 200) {
+        _loadRevenues();
+        _showErrorSnackbar('Transação excluída com sucesso.');
+      } else {
+        _showErrorSnackbar(
+            'Erro ao excluir a transação: ${response.statusCode}');
+      }
+    } catch (e) {
+      _showErrorSnackbar('Erro ao excluir a transação: $e');
+    }
   }
 
   @override
@@ -149,11 +240,17 @@ class _RevenuePageState extends State<RevenuePage> {
                 circleBackgroundColor: const Color(0xFF3D5936),
                 label: 'Receitas de $monthDisplay',
                 value: 'R\$ ${_calculateTotalRevenues().toStringAsFixed(2)}',
+                onSearch: _filterRevenues,
               ),
               Expanded(
                 child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : revenues.isEmpty
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Color(0xFF003566)),
+                        ),
+                      )
+                    : filteredRevenues.isEmpty
                         ? Stack(
                             children: [
                               Positioned.fill(
@@ -178,10 +275,17 @@ class _RevenuePageState extends State<RevenuePage> {
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 16.0),
                                     child: Column(
-                                      children: revenues.map((revenue) {
-                                        return Column(
-                                          children: [
-                                            InfoBox(
+                                      children: filteredRevenues.map((revenue) {
+                                        return GestureDetector(
+                                          behavior: HitTestBehavior.translucent,
+                                          onTap: () {
+                                            _showTransactionDetailPopup(
+                                                context, revenue);
+                                          },
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 8.0),
+                                            child: InfoBox(
                                               item: revenue,
                                               title: revenue.description ??
                                                   'Receita',
@@ -195,8 +299,7 @@ class _RevenuePageState extends State<RevenuePage> {
                                               badgeColor:
                                                   const Color(0xFF3D5936),
                                             ),
-                                            const SizedBox(height: 16),
-                                          ],
+                                          ),
                                         );
                                       }).toList(),
                                     ),
