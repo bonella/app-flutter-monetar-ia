@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 String? validateName(String? value) {
   final regex = RegExp(r"^[A-Za-zÀ-ÿ]+$");
   final numberRegex = RegExp(r"\d");
@@ -16,6 +18,28 @@ String? validateName(String? value) {
 
   if (!regex.hasMatch(value)) {
     return 'Nome não pode conter caracteres especiais';
+  }
+
+  return null;
+}
+
+String? validateGoal(String? value) {
+  if (value == null || value.trim().isEmpty) {
+    return 'Nome é obrigatório';
+  }
+
+  final trimmedValue = value.trim();
+
+  if (trimmedValue.length < 3) {
+    return 'Nome deve ter pelo menos 3 letras';
+  }
+
+  if (value.startsWith(' ')) {
+    return 'Nome não pode começar com espaço.';
+  }
+
+  if (value.endsWith(' ')) {
+    return 'Nome não pode terminar com espaço.';
   }
 
   return null;
@@ -77,6 +101,36 @@ String? validateConfirmPassword(String password, String? confirmPassword) {
   }
   if (password != confirmPassword) {
     return 'Senhas não coincidem';
+  }
+  return null;
+}
+
+String? validateNumericInput(String? value) {
+  if (value == null || value.isEmpty) {
+    return 'Um valor é obrigatório';
+  }
+
+  final isNumericValid = RegExp(r'^\d*\.?\d*$').hasMatch(
+    value.replaceAll('R\$', '').replaceAll('.', '').replaceAll(',', ''),
+  );
+  if (!isNumericValid) {
+    return 'Digite um valor numérico válido';
+  }
+
+  return null;
+}
+
+String? validateDateString(String value) {
+  if (value.isEmpty) {
+    return 'Data é obrigatório';
+  }
+  try {
+    DateTime parsedDate = DateFormat('dd/MM/yyyy').parseStrict(value);
+    if (parsedDate.isBefore(DateTime.now())) {
+      return 'Data deve ser maior ou igual a hoje';
+    }
+  } catch (e) {
+    return 'Data inválida';
   }
   return null;
 }

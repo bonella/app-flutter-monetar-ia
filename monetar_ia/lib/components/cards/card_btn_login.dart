@@ -4,7 +4,7 @@ import 'package:monetar_ia/components/buttons/btn_outline_green.dart';
 import 'package:monetar_ia/views/register_page.dart';
 import 'package:monetar_ia/views/home_page.dart';
 import 'package:monetar_ia/services/auth_service.dart';
-import 'package:monetar_ia/services/form_validations.dart';
+import 'package:monetar_ia/utils/form_validations.dart';
 import 'dart:io';
 import 'package:monetar_ia/services/token_storage.dart';
 

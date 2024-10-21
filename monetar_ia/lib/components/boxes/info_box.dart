@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:monetar_ia/components/popups/goal_detail_popup.dart';
 import 'package:monetar_ia/models/goal.dart';
+import 'package:monetar_ia/models/transaction.dart';
 
 class InfoBox extends StatelessWidget {
-  final Goal goal;
+  final dynamic item;
   final String title;
   final String description;
   final bool showBadge;
@@ -14,7 +15,7 @@ class InfoBox extends StatelessWidget {
 
   const InfoBox({
     super.key,
-    required this.goal,
+    required this.item,
     required this.title,
     required this.description,
     this.showBadge = false,
@@ -28,23 +29,21 @@ class InfoBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return GoalDetailPopup(
-              goal: goal,
-              onEdit: (updatedGoal) {
-                // Aqui você pode implementar a lógica para editar a meta
-              },
-              onDelete: (goalId) {
-                // Aqui você pode implementar a lógica para excluir a meta
-              },
-            );
-          },
-        );
+        if (item is Goal) {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return GoalDetailPopup(
+                goal: item,
+                onEdit: (updatedGoal) {},
+                onDelete: (goalId) {},
+              );
+            },
+          );
+        }
       },
       child: Container(
-        width: 361,
+        width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         decoration: BoxDecoration(
           color: Colors.white,
