@@ -6,14 +6,14 @@ import 'package:monetar_ia/views/goal_page.dart';
 
 class GoalDetailPopup extends StatefulWidget {
   final Goal goal;
-  final Function(Goal) onEdit;
-  final Function(int) onDelete;
+  final Function(Goal) onEditGoal;
+  final Function(int) onDeleteGoal;
 
   const GoalDetailPopup({
     super.key,
     required this.goal,
-    required this.onEdit,
-    required this.onDelete,
+    required this.onEditGoal,
+    required this.onDeleteGoal,
   });
 
   @override
@@ -272,7 +272,7 @@ class _GoalDetailPopupState extends State<GoalDetailPopup> {
           TextButton(
             onPressed: () async {
               await _requestHttp.deleteGoal(goalId);
-              widget.onDelete(goalId);
+              widget.onDeleteGoal(goalId);
               Navigator.of(context).pop();
               Navigator.of(context).pop();
               Navigator.pushReplacement(
@@ -328,7 +328,7 @@ class _GoalDetailPopupState extends State<GoalDetailPopup> {
       final response = await _requestHttp.updateGoal(editedGoal.id, goalData);
 
       if (response.statusCode == 200 || response.statusCode == 204) {
-        widget.onEdit(editedGoal);
+        widget.onEditGoal(editedGoal);
         setState(() {
           _isEditing = false;
         });

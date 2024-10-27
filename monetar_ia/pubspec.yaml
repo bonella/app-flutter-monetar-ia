@@ -20,6 +20,7 @@ dependencies:
   googleapis_auth: ^1.5.1
   shared_preferences: ^2.0.0
   intl: ^0.18.1
+  jwt_decoder: ^2.0.1
 
 dev_dependencies:
   flutter_test:
@@ -32,10 +33,9 @@ flutter:
   assets:
     - lib/assets/logo.png
     - lib/assets/logo2.png
-    - lib/assets/lupa.png
-    - lib/assets/relatorio.png
-    - lib/assets/trofeu.png
-    - lib/assets/fundo_metas2.png
+    - lib/assets/fundo_metas3.png
+    - lib/assets/fundo_receitas2.png
+    - lib/assets/fundo_despesas2.png
 
 flutter_icons:
   android: true

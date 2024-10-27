@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:monetar_ia/components/popups/goal_detail_popup.dart';
-import 'package:monetar_ia/models/goal.dart';
-import 'package:monetar_ia/models/transaction.dart';
 
 class InfoBox extends StatelessWidget {
-  final dynamic item;
   final String title;
   final String description;
   final bool showBadge;
@@ -12,10 +8,10 @@ class InfoBox extends StatelessWidget {
   final Color borderColor;
   final Color badgeColor;
   final String creationDate;
+  final VoidCallback? onTap;
 
   const InfoBox({
     super.key,
-    required this.item,
     required this.title,
     required this.description,
     this.showBadge = false,
@@ -23,25 +19,13 @@ class InfoBox extends StatelessWidget {
     this.borderColor = const Color(0xFF3D5936),
     this.badgeColor = const Color(0xFF3D5936),
     required this.creationDate,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        if (item is Goal) {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return GoalDetailPopup(
-                goal: item,
-                onEdit: (updatedGoal) {},
-                onDelete: (goalId) {},
-              );
-            },
-          );
-        }
-      },
+      onTap: onTap,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),

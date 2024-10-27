@@ -7,12 +7,16 @@ class HeaderHome extends StatelessWidget {
   final VoidCallback onPrevMonth;
   final VoidCallback onNextMonth;
   final String name;
+  final double totalRevenue;
+  final double totalExpense;
 
   const HeaderHome({
     required this.dateButton,
     required this.onPrevMonth,
     required this.onNextMonth,
     required this.name,
+    required this.totalRevenue,
+    required this.totalExpense,
     super.key,
   });
 
@@ -104,16 +108,16 @@ class HeaderHome extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Column(
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              const Text(
                                 'Receitas do Mês',
                                 style: TextStyle(color: Colors.white),
                               ),
                               Text(
-                                'R\$ 1.000,00',
-                                style: TextStyle(
+                                'R\$ ${totalRevenue.toStringAsFixed(2)}',
+                                style: const TextStyle(
                                     color: Colors.white, fontSize: 14),
                               ),
                             ],
@@ -160,16 +164,16 @@ class HeaderHome extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Column(
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              const Text(
                                 'Despesas do Mês',
                                 style: TextStyle(color: Colors.white),
                               ),
                               Text(
-                                'R\$ 0,00',
-                                style: TextStyle(
+                                'R\$ ${totalExpense.toStringAsFixed(2)}',
+                                style: const TextStyle(
                                     color: Colors.white, fontSize: 14),
                               ),
                             ],

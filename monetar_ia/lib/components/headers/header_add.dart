@@ -59,15 +59,36 @@ class _HeaderAddState extends State<HeaderAdd> {
         ),
         child: Column(
           children: [
-            const Padding(
-              padding: EdgeInsets.only(top: 40.0),
-              child: Text(
-                'Monetar.IA',
-                style: TextStyle(
-                  fontFamily: 'Kumbh Sans',
-                  fontSize: 32,
-                  color: Colors.white,
-                ),
+            Padding(
+              padding: const EdgeInsets.only(top: 40.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: ClipOval(
+                      child: Image.asset(
+                        'lib/assets/logo2.png',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Monetar.IA',
+                    style: TextStyle(
+                      fontFamily: 'Kumbh Sans',
+                      fontSize: 32,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
               ),
             ),
             Padding(

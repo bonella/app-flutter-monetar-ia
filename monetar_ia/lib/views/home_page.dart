@@ -18,6 +18,10 @@ import 'package:monetar_ia/models/goal.dart';
 import 'package:monetar_ia/models/transaction.dart';
 import 'package:monetar_ia/services/request_http.dart';
 import 'package:intl/intl.dart';
+import 'package:monetar_ia/utils/calculate_total.dart';
+import 'package:monetar_ia/components/popups/goal_detail_popup.dart';
+import 'package:monetar_ia/components/popups/transaction_detail_popup.dart';
+import 'package:monetar_ia/models/category.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -31,6 +35,10 @@ class _HomePageState extends State<HomePage> {
   String userName = '';
   Transaction? lastTransaction;
   Goal? lastGoal;
+  double totalRevenue = 0.0;
+  double totalExpense = 0.0;
+  List<Transaction> revenues = [];
+
   final RequestHttp _requestHttp = RequestHttp();
 
   @override
@@ -38,35 +46,236 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _showStayConnectedDialog();
     _loadUserName();
-    _loadLatestTransaction();
+    _loadTotalRevenue();
+    _loadTotalExpense();
+    _loadLatestRevenue();
     ();
-    _loadLastGoal();
+    _loadLatestGoal();
+  }
+
+  void _showGoalDetailPopup(BuildContext context, Goal goal) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return GoalDetailPopup(
+          goal: goal,
+          onEditGoal: (editedGoal) {},
+          onDeleteGoal: (goalId) {},
+        );
+      },
+    );
   }
 
   Future<void> _loadUserName() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? name = prefs.getString('userName');
-    setState(() {
-      userName = name ?? 'Usuário';
-    });
+    try {
+      String? name = await _requestHttp.getUserName();
+      setState(() {
+        userName = name ?? 'Usuário';
+      });
+    } catch (e) {
+      print('Erro ao carregar o nome do usuário: $e');
+    }
   }
 
-  Future<void> _loadLatestTransaction() async {
+  Future<List<Category>> loadCategories() async {
+    String formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate);
+
     try {
-      var response = await _requestHttp.get('/transactions');
+      var response = await _requestHttp.get('categories?date=$formattedDate');
+
+      if (response.statusCode == 200) {
+        var decodedResponse = utf8.decode(response.bodyBytes);
+        return (json.decode(decodedResponse) as List)
+            .map((category) => Category.fromJson(category))
+            .toList();
+      } else {
+        throw Exception('Falha ao carregar categorias: ${response.statusCode}');
+      }
+    } catch (e) {
+      _showErrorSnackbar('Erro ao carregar categorias: $e');
+      return [];
+    }
+  }
+
+  Future<void> _loadRevenues() async {
+    setState(() {});
+
+    String formattedDate = DateFormat('yyyy-MM').format(selectedDate);
+
+    try {
+      var response =
+          await _requestHttp.get('transactions/revenues?date=$formattedDate');
+
+      if (response.statusCode == 200) {
+        setState(() {
+          revenues = (json.decode(response.body) as List)
+              .map((revenue) => Transaction.fromJson(revenue))
+              .toList();
+        });
+      } else {
+        _showErrorSnackbar('Erro ao carregar receitas: ${response.statusCode}');
+        setState(() {});
+      }
+    } catch (e) {
+      print('Erro ao carregar receitas: $e');
+      setState(() {});
+    }
+  }
+
+  void _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _showTransactionDetailPopup(
+      BuildContext context, Transaction transaction) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return TransactionDetailPopup(
+          transaction: transaction,
+          onUpdateTransaction:
+              (userId, categoryId, amount, type, description, transactionDate) {
+            print(
+                'Página Revenue: User ID: $userId, Type: $type, Amount: $amount, Category ID: $categoryId, Description: $description, Transaction Date: $transactionDate');
+
+            int parsedCategoryId = int.tryParse(categoryId) ?? 2;
+
+            if (parsedCategoryId <= 0) {
+              _showErrorSnackbar('Categoria inválida.');
+              return;
+            }
+
+            if (type != 'INCOME' && type != 'EXPENSE') {
+              _showErrorSnackbar('Tipo inválido. Deve ser INCOME ou EXPENSE.');
+              return;
+            }
+
+            _requestHttp.put('transactions/${transaction.id}', {
+              'user_id': userId,
+              'type': type,
+              'amount': amount,
+              'category_id': parsedCategoryId,
+              'description': description,
+              'transaction_date': transactionDate.toIso8601String(),
+            }).then((response) {
+              if (response.statusCode == 200) {
+                _loadRevenues();
+                _showErrorSnackbar('Transação atualizada com sucesso');
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) => const HomePage()),
+                );
+              } else {
+                _showErrorSnackbar(
+                    'Erro ao atualizar transação: ${response.statusCode}');
+              }
+            }).catchError((e) {
+              _showErrorSnackbar('Erro ao atualizar transação: $e');
+            });
+          },
+          onDeleteTransaction: (String transactionId) {
+            _deleteTransaction(transactionId);
+          },
+          loadCategories: loadCategories,
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteTransaction(String transactionId) async {
+    try {
+      var response = await _requestHttp.delete('transactions/$transactionId');
+      if (response.statusCode == 200) {
+        _loadRevenues();
+        _showErrorSnackbar('Transação excluída com sucesso.');
+      } else {
+        _showErrorSnackbar(
+            'Erro ao excluir a transação: ${response.statusCode}');
+      }
+    } catch (e) {
+      _showErrorSnackbar('Erro ao excluir a transação: $e');
+    }
+  }
+
+  Future<void> _loadTotalRevenue() async {
+    try {
+      DateTime firstDayOfMonth =
+          DateTime(selectedDate.year, selectedDate.month, 1);
+      DateTime lastDayOfMonth =
+          DateTime(selectedDate.year, selectedDate.month + 1, 0);
+
+      totalRevenue = 0.0;
+
+      var response = await _requestHttp.get(
+          'transactions/revenues?start_date=${firstDayOfMonth.toIso8601String()}&end_date=${lastDayOfMonth.toIso8601String()}');
       if (response.statusCode == 200) {
         List<dynamic> decodedResponse = json.decode(response.body);
-
         List<Transaction> transactions =
             decodedResponse.map((data) => Transaction.fromJson(data)).toList();
 
         if (transactions.isNotEmpty) {
+          totalRevenue = calculateTotalRevenues(transactions);
+        } else {
+          totalRevenue = 0.0;
+        }
+
+        setState(() {});
+      } else {
+        print('Erro ao carregar as receitas: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Erro ao carregar as receitas: $e');
+    }
+  }
+
+  Future<void> _loadTotalExpense() async {
+    try {
+      DateTime firstDayOfMonth =
+          DateTime(selectedDate.year, selectedDate.month, 1);
+      DateTime lastDayOfMonth =
+          DateTime(selectedDate.year, selectedDate.month + 1, 0);
+
+      totalExpense = 0.0;
+
+      var response = await _requestHttp.get(
+          'transactions/expenses?start_date=${firstDayOfMonth.toIso8601String()}&end_date=${lastDayOfMonth.toIso8601String()}');
+      if (response.statusCode == 200) {
+        List<dynamic> decodedResponse = json.decode(response.body);
+        List<Transaction> transactions =
+            decodedResponse.map((data) => Transaction.fromJson(data)).toList();
+
+        if (transactions.isNotEmpty) {
+          totalExpense = calculateTotalExpenses(transactions);
+        } else {
+          totalExpense = 0.0;
+        }
+
+        setState(() {});
+      } else {}
+    } catch (e) {
+      print('Erro ao carregar as despesas: $e');
+    }
+  }
+
+  Future<void> _loadLatestRevenue() async {
+    try {
+      var response = await _requestHttp.get('transactions/revenues');
+      if (response.statusCode == 200) {
+        List<dynamic> decodedResponse = json.decode(response.body);
+        List<Transaction> transactions =
+            decodedResponse.map((data) => Transaction.fromJson(data)).toList();
+
+        transactions = transactions.where((transaction) {
+          return transaction.transactionDate.year == selectedDate.year &&
+              transaction.transactionDate.month == selectedDate.month;
+        }).toList();
+
+        if (transactions.isNotEmpty) {
           lastTransaction = transactions.reduce(
               (a, b) => a.transactionDate.isAfter(b.transactionDate) ? a : b);
-
           setState(() {});
         } else {
-          print('Nenhuma transação encontrada.');
+          print('Nenhuma transação encontrada para o mês selecionado.');
         }
       } else {
         print('Erro ao carregar as transações: ${response.statusCode}');
@@ -76,16 +285,31 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> _loadLastGoal() async {
+  Future<void> _loadLatestGoal() async {
     try {
-      var response = await _requestHttp.get('goals?limit=1');
+      var response = await _requestHttp.get('goals/');
       if (response.statusCode == 200) {
-        var decodedResponse = json.decode(response.body);
-        lastGoal = Goal.fromJson(decodedResponse[0]);
-        setState(() {});
+        List<dynamic> decodedResponse = json.decode(response.body);
+        List<Goal> goals =
+            decodedResponse.map((data) => Goal.fromJson(data)).toList();
+
+        goals = goals.where((goal) {
+          return goal.createdAt.year == selectedDate.year &&
+              goal.createdAt.month == selectedDate.month;
+        }).toList();
+
+        if (goals.isNotEmpty) {
+          lastGoal =
+              goals.reduce((a, b) => a.createdAt.isAfter(b.createdAt) ? a : b);
+          setState(() {});
+        } else {
+          print('Nenhuma meta encontrada para o mês selecionado.');
+        }
+      } else {
+        print('Erro ao carregar as metas: ${response.statusCode}');
       }
     } catch (e) {
-      print('Erro ao carregar a última meta: $e');
+      print('Erro ao carregar as metas: $e');
     }
   }
 
@@ -178,9 +402,15 @@ class _HomePageState extends State<HomePage> {
                       onDateChanged: (DateTime newDate) {
                         setState(() {
                           selectedDate = newDate;
+                          print('Data selecionada: $selectedDate');
+
+                          _loadTotalRevenue();
+                          _loadTotalExpense();
                         });
                       },
                     ),
+                    totalRevenue: totalRevenue,
+                    totalExpense: totalExpense,
                     onPrevMonth: () {},
                     onNextMonth: () {},
                   ),
@@ -197,32 +427,56 @@ class _HomePageState extends State<HomePage> {
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 16.0, vertical: 8.0),
-                                  child: InfoBox(
-                                    item: lastTransaction,
-                                    title: lastTransaction?.description ??
-                                        'Último Registro',
-                                    description: lastTransaction != null
-                                        ? 'R\$ ${lastTransaction!.amount.toStringAsFixed(2)}'
-                                        : '',
-                                    creationDate: lastTransaction != null
-                                        ? DateFormat('dd/MM/yyyy').format(
-                                            lastTransaction!.transactionDate)
-                                        : 'Data não disponível',
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      if (lastTransaction != null) {
+                                        _showTransactionDetailPopup(
+                                            context, lastTransaction!);
+                                      }
+                                    },
+                                    child: InfoBox(
+                                      title: lastTransaction?.description !=
+                                              null
+                                          ? 'Última Receita: ${lastTransaction!.description}'
+                                          : 'Sem Registros',
+                                      description: lastTransaction != null
+                                          ? 'R\$ ${lastTransaction!.amount.toStringAsFixed(2)}'
+                                          : '',
+                                      creationDate: lastTransaction != null
+                                          ? DateFormat('dd/MM/yyyy').format(
+                                              lastTransaction!.transactionDate)
+                                          : 'Data não disponível',
+                                    ),
                                   ),
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 16.0, vertical: 8.0),
-                                  child: InfoBox(
-                                    item: lastGoal,
-                                    title: lastGoal?.name ?? 'Última Meta',
-                                    description: lastGoal != null
-                                        ? 'R\$ ${lastGoal!.currentAmount.toStringAsFixed(2)} / ${lastGoal!.targetAmount.toStringAsFixed(2)} (${((lastGoal!.currentAmount / lastGoal!.targetAmount) * 100).toStringAsFixed(0)}%)'
-                                        : '',
-                                    creationDate: lastGoal != null
-                                        ? DateFormat('dd/MM/yyyy')
-                                            .format(lastGoal!.createdAt)
-                                        : 'Data não disponível',
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      if (lastGoal != null) {
+                                        _showGoalDetailPopup(
+                                            context, lastGoal!);
+                                      }
+                                    },
+                                    child: InfoBox(
+                                      title: lastGoal?.name != null
+                                          ? 'Última Meta: ${lastGoal!.name}'
+                                          : 'Sem Metas',
+                                      description: lastGoal != null
+                                          ? 'R\$ ${lastGoal!.targetAmount.toStringAsFixed(2)}'
+                                          : 'R\$ 0.00',
+                                      showBadge: lastGoal != null,
+                                      percentage: lastGoal != null
+                                          ? '${lastGoal!.percentage}%'
+                                          : '0%',
+                                      borderColor: const Color(0xFF003566),
+                                      badgeColor: const Color(0xFF003566),
+                                      creationDate: lastGoal != null
+                                          ? DateFormat('dd/MM/yyyy')
+                                              .format(lastGoal!.createdAt)
+                                          : 'Data não disponível',
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -233,12 +487,12 @@ class _HomePageState extends State<HomePage> {
                                     height: 300,
                                     child: PageView(
                                       children: const [
-                                        LineGraphic(title: 'Últimas compras'),
+                                        LineGraphic(title: 'Dez últimos'),
                                         CustomPieChart(
-                                            title: 'Distribuição de despesas'),
-                                        ColumnChart(
                                             title:
-                                                'Comparativo de receitas e despesas'),
+                                                'Distribuição de transações no mês'),
+                                        ColumnChart(
+                                            title: 'Comparativo entre ano'),
                                       ],
                                     ),
                                   ),

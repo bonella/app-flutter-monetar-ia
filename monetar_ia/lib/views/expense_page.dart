@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:monetar_ia/components/headers/header_add.dart';
-import 'package:monetar_ia/components/cards/white_card.dart';
 import 'package:monetar_ia/components/boxes/info_box.dart';
 import 'package:monetar_ia/components/footers/footer.dart';
 import 'package:monetar_ia/components/buttons/round_btn.dart';
@@ -11,6 +10,8 @@ import 'package:monetar_ia/models/category.dart';
 import 'package:monetar_ia/services/request_http.dart';
 import 'package:monetar_ia/components/popups/add_transaction_popup.dart';
 import 'package:monetar_ia/components/popups/transaction_detail_popup.dart';
+import 'package:monetar_ia/views/home_page.dart';
+import 'package:monetar_ia/services/token_storage.dart';
 
 class ExpensePage extends StatefulWidget {
   const ExpensePage({super.key});
@@ -25,6 +26,8 @@ class _ExpensePageState extends State<ExpensePage> {
   List<Transaction> filteredExpenses = [];
   List<Category> categories = [];
   final RequestHttp _requestHttp = RequestHttp();
+  final TokenStorage _tokenStorage = TokenStorage();
+
   bool _isLoading = true;
 
   @override
@@ -83,28 +86,33 @@ class _ExpensePageState extends State<ExpensePage> {
     String formattedDate = DateFormat('yyyy-MM').format(selectedDate);
 
     try {
-      var response = await _requestHttp
-          .get('transactions?type=EXPENSE&date=$formattedDate');
-      if (response.statusCode == 200) {
-        setState(() {
-          expenses = (json.decode(response.body) as List)
-              .map((expense) => Transaction.fromJson(expense))
-              .toList();
+      if (await _tokenStorage.isTokenValid()) {
+        var response =
+            await _requestHttp.get('transactions/expenses?date=$formattedDate');
 
-          expenses
-              .sort((a, b) => b.transactionDate.compareTo(a.transactionDate));
+        if (response.statusCode == 200) {
+          setState(() {
+            expenses = (json.decode(response.body) as List)
+                .map((expense) => Transaction.fromJson(expense))
+                .toList();
 
-          filteredExpenses = List.from(expenses);
-          _isLoading = false;
-        });
+            expenses
+                .sort((a, b) => b.transactionDate.compareTo(a.transactionDate));
+            filteredExpenses = List.from(expenses);
+            _filterExpenses("");
+            _isLoading = false;
+          });
+        } else {
+          _showErrorSnackbar(
+              'Erro ao carregar despesas: ${response.statusCode}');
+          setState(() {
+            _isLoading = false;
+          });
+        }
       } else {
-        _showErrorSnackbar('Erro ao carregar despesas: ${response.statusCode}');
-        setState(() {
-          _isLoading = false;
-        });
+        print("Token não está disponível. Faça login novamente.");
       }
     } catch (e) {
-      _showErrorSnackbar('Erro: $e');
       setState(() {
         _isLoading = false;
       });
@@ -114,15 +122,19 @@ class _ExpensePageState extends State<ExpensePage> {
   void _filterExpenses(String searchTerm) {
     setState(() {
       if (searchTerm.isEmpty) {
-        filteredExpenses = List.from(expenses);
+        filteredExpenses = expenses.where((expense) {
+          return expense.transactionDate.year == selectedDate.year &&
+              expense.transactionDate.month == selectedDate.month;
+        }).toList();
       } else {
-        filteredExpenses = expenses
-            .where((expense) =>
-                expense.description != null &&
-                expense.description!
-                    .toLowerCase()
-                    .contains(searchTerm.toLowerCase()))
-            .toList();
+        filteredExpenses = expenses.where((expense) {
+          return (expense.description != null &&
+              expense.description!
+                  .toLowerCase()
+                  .contains(searchTerm.toLowerCase()) &&
+              expense.transactionDate.year == selectedDate.year &&
+              expense.transactionDate.month == selectedDate.month);
+        }).toList();
       }
     });
   }
@@ -134,7 +146,7 @@ class _ExpensePageState extends State<ExpensePage> {
   void _showAddTransactionPopup() {
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (BuildContext context) {
         return AddTransactionPopup(
           onSave:
               (userId, amount, categoryId, description, transactionDate, type) {
@@ -159,9 +171,17 @@ class _ExpensePageState extends State<ExpensePage> {
       builder: (BuildContext context) {
         return TransactionDetailPopup(
           transaction: transaction,
-          onUpdate:
-              (userId, type, amount, categoryId, description, transactionDate) {
-            int parsedCategoryId = int.tryParse(categoryId) ?? -1;
+          onUpdateTransaction:
+              (userId, categoryId, amount, type, description, transactionDate) {
+            print(
+                'Página Expense: User ID: $userId, Type: $type, Amount: $amount, Category ID: $categoryId, Description: $description, Transaction Date: $transactionDate');
+
+            int parsedCategoryId = int.tryParse(categoryId) ?? 2;
+
+            if (parsedCategoryId <= 0) {
+              _showErrorSnackbar('Categoria inválida.');
+              return;
+            }
 
             if (type != 'INCOME' && type != 'EXPENSE') {
               _showErrorSnackbar('Tipo inválido. Deve ser INCOME ou EXPENSE.');
@@ -178,6 +198,7 @@ class _ExpensePageState extends State<ExpensePage> {
             }).then((response) {
               if (response.statusCode == 200) {
                 _loadExpenses();
+                _showErrorSnackbar('Transação atualizada com sucesso');
               } else {
                 _showErrorSnackbar(
                     'Erro ao atualizar transação: ${response.statusCode}');
@@ -186,7 +207,7 @@ class _ExpensePageState extends State<ExpensePage> {
               _showErrorSnackbar('Erro ao atualizar transação: $e');
             });
           },
-          onDelete: (String transactionId) {
+          onDeleteTransaction: (String transactionId) {
             _deleteTransaction(transactionId);
           },
           loadCategories: loadCategories,
@@ -216,103 +237,106 @@ class _ExpensePageState extends State<ExpensePage> {
     String monthDisplay =
         formattedMonth[0].toUpperCase() + formattedMonth.substring(1);
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              HeaderAdd(
-                month: monthDisplay,
-                onPrevMonth: _onPrevMonth,
-                onNextMonth: _onNextMonth,
-                onDateChanged: _onDateChanged,
-                backgroundColor: const Color(0xFF8C1C03),
-                circleIcon: Icons.money_off,
-                circleIconColor: Colors.white,
-                circleBackgroundColor: const Color(0xFF8C1C03),
-                label: 'Despesas de $monthDisplay',
-                value: 'R\$ ${_calculateTotalExpenses().toStringAsFixed(2)}',
-                onSearch: _filterExpenses,
-              ),
-              Expanded(
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : filteredExpenses.isEmpty
-                        ? Stack(
-                            children: [
-                              Positioned.fill(
-                                child: Image.asset(
-                                  'lib/assets/fundo_metas2.png',
-                                  fit: BoxFit.contain,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.6,
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.4,
-                                ),
-                              ),
-                            ],
-                          )
-                        : SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => const HomePage()));
+        return false;
+      },
+      child: Scaffold(
+        body: Stack(
+          children: [
+            Column(
+              children: [
+                HeaderAdd(
+                  month: monthDisplay,
+                  onPrevMonth: _onPrevMonth,
+                  onNextMonth: _onNextMonth,
+                  onDateChanged: _onDateChanged,
+                  backgroundColor: const Color(0xFF8C1C03),
+                  circleIcon: Icons.money_off_outlined,
+                  circleIconColor: Colors.white,
+                  circleBackgroundColor: const Color(0xFF8C1C03),
+                  label: 'Despesas de $monthDisplay',
+                  value: 'R\$ ${_calculateTotalExpenses().toStringAsFixed(2)}',
+                  onSearch: _filterExpenses,
+                ),
+                Expanded(
+                  child: _isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Color(0xFF8C1C03)),
+                          ),
+                        )
+                      : filteredExpenses.isEmpty
+                          ? Stack(
                               children: [
-                                const SizedBox(height: 16),
-                                WhiteCard(
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16.0),
-                                    child: Column(
-                                      children: filteredExpenses.map((expense) {
-                                        return GestureDetector(
-                                          behavior: HitTestBehavior.translucent,
-                                          onTap: () {
-                                            _showTransactionDetailPopup(
-                                                context, expense);
-                                          },
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                vertical: 8.0),
-                                            child: InfoBox(
-                                              item: expense,
-                                              title: expense.description ??
-                                                  'Despesa',
-                                              description:
-                                                  'R\$ ${expense.amount.toStringAsFixed(2)}',
-                                              creationDate: expense
-                                                  .formattedTransactionDate,
-                                              showBadge: false,
-                                              borderColor:
-                                                  const Color(0xFF8C1C03),
-                                              badgeColor:
-                                                  const Color(0xFF8C1C03),
-                                            ),
-                                          ),
-                                        );
-                                      }).toList(),
-                                    ),
+                                Positioned.fill(
+                                  child: Image.asset(
+                                    'lib/assets/fundo_despesas2.png',
+                                    fit: BoxFit.contain,
+                                    width:
+                                        MediaQuery.of(context).size.width * 0.6,
+                                    height: MediaQuery.of(context).size.height *
+                                        0.4,
                                   ),
                                 ),
                               ],
+                            )
+                          : Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16.0),
+                              child: ListView.builder(
+                                itemCount: filteredExpenses.length,
+                                itemBuilder: (context, index) {
+                                  final expense = filteredExpenses[index];
+                                  return Column(
+                                    children: [
+                                      GestureDetector(
+                                        onTap: () =>
+                                            _showTransactionDetailPopup(
+                                                context, expense),
+                                        child: InfoBox(
+                                          title:
+                                              expense.description ?? 'Despesa',
+                                          description:
+                                              'R\$ ${expense.amount.toStringAsFixed(2)}',
+                                          creationDate:
+                                              expense.formattedTransactionDate,
+                                          showBadge: false,
+                                          borderColor: const Color(0xFF8C1C03),
+                                          badgeColor: const Color(0xFF8C1C03),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                    ],
+                                  );
+                                },
+                              ),
                             ),
-                          ),
-              ),
-              const Footer(
-                backgroundColor: Color(0xFF8C1C03),
-              ),
-            ],
-          ),
-          Positioned(
-            bottom: 30,
-            left: MediaQuery.of(context).size.width / 2 - 30,
-            child: RoundButton(
-              icon: Icons.add,
-              backgroundColor: Colors.white,
-              borderColor: const Color(0xFF8C1C03),
-              iconColor: const Color(0xFF8C1C03),
-              onPressed: _showAddTransactionPopup,
+                ),
+                const Footer(backgroundColor: Color(0xFF8C1C03)),
+              ],
             ),
-          ),
-        ],
+            Positioned(
+              bottom: 30,
+              left: MediaQuery.of(context).size.width / 2 - 30,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  RoundButton(
+                    icon: Icons.add,
+                    backgroundColor: Colors.white,
+                    borderColor: const Color(0xFF8C1C03),
+                    iconColor: const Color(0xFF8C1C03),
+                    onPressed: _showAddTransactionPopup,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

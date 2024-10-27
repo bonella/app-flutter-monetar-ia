@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:monetar_ia/components/headers/header_add.dart';
-import 'package:monetar_ia/components/cards/white_card.dart';
 import 'package:monetar_ia/components/boxes/info_box.dart';
 import 'package:monetar_ia/components/footers/footer.dart';
 import 'package:monetar_ia/components/buttons/round_btn.dart';
@@ -11,6 +10,8 @@ import 'package:monetar_ia/models/category.dart';
 import 'package:monetar_ia/services/request_http.dart';
 import 'package:monetar_ia/components/popups/add_transaction_popup.dart';
 import 'package:monetar_ia/components/popups/transaction_detail_popup.dart';
+import 'package:monetar_ia/views/home_page.dart';
+import 'package:monetar_ia/services/token_storage.dart';
 
 class RevenuePage extends StatefulWidget {
   const RevenuePage({super.key});
@@ -25,6 +26,8 @@ class _RevenuePageState extends State<RevenuePage> {
   List<Transaction> filteredRevenues = [];
   List<Category> categories = [];
   final RequestHttp _requestHttp = RequestHttp();
+  final TokenStorage _tokenStorage = TokenStorage();
+
   bool _isLoading = true;
 
   @override
@@ -83,28 +86,33 @@ class _RevenuePageState extends State<RevenuePage> {
     String formattedDate = DateFormat('yyyy-MM').format(selectedDate);
 
     try {
-      var response = await _requestHttp
-          .get('transactions?type=INCOME&date=$formattedDate');
-      if (response.statusCode == 200) {
-        setState(() {
-          revenues = (json.decode(response.body) as List)
-              .map((revenue) => Transaction.fromJson(revenue))
-              .toList();
+      if (await _tokenStorage.isTokenValid()) {
+        var response =
+            await _requestHttp.get('transactions/revenues?date=$formattedDate');
 
-          revenues
-              .sort((a, b) => b.transactionDate.compareTo(a.transactionDate));
+        if (response.statusCode == 200) {
+          setState(() {
+            revenues = (json.decode(response.body) as List)
+                .map((revenue) => Transaction.fromJson(revenue))
+                .toList();
 
-          filteredRevenues = List.from(revenues);
-          _isLoading = false;
-        });
+            revenues
+                .sort((a, b) => b.transactionDate.compareTo(a.transactionDate));
+            filteredRevenues = List.from(revenues);
+            _filterRevenues("");
+            _isLoading = false;
+          });
+        } else {
+          _showErrorSnackbar(
+              'Erro ao carregar receitas: ${response.statusCode}');
+          setState(() {
+            _isLoading = false;
+          });
+        }
       } else {
-        _showErrorSnackbar('Erro ao carregar receitas: ${response.statusCode}');
-        setState(() {
-          _isLoading = false;
-        });
+        print("Token não está disponível. Faça login novamente.");
       }
     } catch (e) {
-      _showErrorSnackbar('Erro: $e');
       setState(() {
         _isLoading = false;
       });
@@ -114,15 +122,19 @@ class _RevenuePageState extends State<RevenuePage> {
   void _filterRevenues(String searchTerm) {
     setState(() {
       if (searchTerm.isEmpty) {
-        filteredRevenues = List.from(revenues);
+        filteredRevenues = revenues.where((revenue) {
+          return revenue.transactionDate.year == selectedDate.year &&
+              revenue.transactionDate.month == selectedDate.month;
+        }).toList();
       } else {
-        filteredRevenues = revenues
-            .where((revenue) =>
-                revenue.description != null &&
-                revenue.description!
-                    .toLowerCase()
-                    .contains(searchTerm.toLowerCase()))
-            .toList();
+        filteredRevenues = revenues.where((revenue) {
+          return (revenue.description != null &&
+              revenue.description!
+                  .toLowerCase()
+                  .contains(searchTerm.toLowerCase()) &&
+              revenue.transactionDate.year == selectedDate.year &&
+              revenue.transactionDate.month == selectedDate.month);
+        }).toList();
       }
     });
   }
@@ -134,7 +146,7 @@ class _RevenuePageState extends State<RevenuePage> {
   void _showAddTransactionPopup() {
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (BuildContext context) {
         return AddTransactionPopup(
           onSave:
               (userId, amount, categoryId, description, transactionDate, type) {
@@ -159,17 +171,17 @@ class _RevenuePageState extends State<RevenuePage> {
       builder: (BuildContext context) {
         return TransactionDetailPopup(
           transaction: transaction,
-          onUpdate:
-              (userId, type, amount, categoryId, description, transactionDate) {
-            print('Updating transaction with:');
-            print('userId: $userId');
-            print('type: $type');
-            print('amount: $amount');
-            print('categoryId: $categoryId');
-            print('description: $description');
-            print('transactionDate: $transactionDate');
+          onUpdateTransaction:
+              (userId, categoryId, amount, type, description, transactionDate) {
+            print(
+                'Página Revenue: User ID: $userId, Type: $type, Amount: $amount, Category ID: $categoryId, Description: $description, Transaction Date: $transactionDate');
 
-            int parsedCategoryId = int.tryParse(categoryId) ?? -1;
+            int parsedCategoryId = int.tryParse(categoryId) ?? 2;
+
+            if (parsedCategoryId <= 0) {
+              _showErrorSnackbar('Categoria inválida.');
+              return;
+            }
 
             if (type != 'INCOME' && type != 'EXPENSE') {
               _showErrorSnackbar('Tipo inválido. Deve ser INCOME ou EXPENSE.');
@@ -186,6 +198,7 @@ class _RevenuePageState extends State<RevenuePage> {
             }).then((response) {
               if (response.statusCode == 200) {
                 _loadRevenues();
+                _showErrorSnackbar('Transação atualizada com sucesso');
               } else {
                 _showErrorSnackbar(
                     'Erro ao atualizar transação: ${response.statusCode}');
@@ -194,7 +207,7 @@ class _RevenuePageState extends State<RevenuePage> {
               _showErrorSnackbar('Erro ao atualizar transação: $e');
             });
           },
-          onDelete: (String transactionId) {
+          onDeleteTransaction: (String transactionId) {
             _deleteTransaction(transactionId);
           },
           loadCategories: loadCategories,
@@ -224,106 +237,106 @@ class _RevenuePageState extends State<RevenuePage> {
     String monthDisplay =
         formattedMonth[0].toUpperCase() + formattedMonth.substring(1);
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              HeaderAdd(
-                month: monthDisplay,
-                onPrevMonth: _onPrevMonth,
-                onNextMonth: _onNextMonth,
-                onDateChanged: _onDateChanged,
-                backgroundColor: const Color(0xFF3D5936),
-                circleIcon: Icons.attach_money_outlined,
-                circleIconColor: Colors.white,
-                circleBackgroundColor: const Color(0xFF3D5936),
-                label: 'Receitas de $monthDisplay',
-                value: 'R\$ ${_calculateTotalRevenues().toStringAsFixed(2)}',
-                onSearch: _filterRevenues,
-              ),
-              Expanded(
-                child: _isLoading
-                    ? const Center(
-                        child: CircularProgressIndicator(
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Color(0xFF003566)),
-                        ),
-                      )
-                    : filteredRevenues.isEmpty
-                        ? Stack(
-                            children: [
-                              Positioned.fill(
-                                child: Image.asset(
-                                  'lib/assets/fundo_metas2.png',
-                                  fit: BoxFit.contain,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.6,
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.4,
-                                ),
-                              ),
-                            ],
-                          )
-                        : SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => const HomePage()));
+        return false;
+      },
+      child: Scaffold(
+        body: Stack(
+          children: [
+            Column(
+              children: [
+                HeaderAdd(
+                  month: monthDisplay,
+                  onPrevMonth: _onPrevMonth,
+                  onNextMonth: _onNextMonth,
+                  onDateChanged: _onDateChanged,
+                  backgroundColor: const Color(0xFF3D5936),
+                  circleIcon: Icons.attach_money_outlined,
+                  circleIconColor: Colors.white,
+                  circleBackgroundColor: const Color(0xFF3D5936),
+                  label: 'Receitas de $monthDisplay',
+                  value: 'R\$ ${_calculateTotalRevenues().toStringAsFixed(2)}',
+                  onSearch: _filterRevenues,
+                ),
+                Expanded(
+                  child: _isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Color(0xFF003566)),
+                          ),
+                        )
+                      : filteredRevenues.isEmpty
+                          ? Stack(
                               children: [
-                                const SizedBox(height: 16),
-                                WhiteCard(
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16.0),
-                                    child: Column(
-                                      children: filteredRevenues.map((revenue) {
-                                        return GestureDetector(
-                                          behavior: HitTestBehavior.translucent,
-                                          onTap: () {
-                                            _showTransactionDetailPopup(
-                                                context, revenue);
-                                          },
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                vertical: 8.0),
-                                            child: InfoBox(
-                                              item: revenue,
-                                              title: revenue.description ??
-                                                  'Receita',
-                                              description:
-                                                  'R\$ ${revenue.amount.toStringAsFixed(2)}',
-                                              creationDate: revenue
-                                                  .formattedTransactionDate,
-                                              showBadge: false,
-                                              borderColor:
-                                                  const Color(0xFF3D5936),
-                                              badgeColor:
-                                                  const Color(0xFF3D5936),
-                                            ),
-                                          ),
-                                        );
-                                      }).toList(),
-                                    ),
+                                Positioned.fill(
+                                  child: Image.asset(
+                                    'lib/assets/fundo_receitas2.png',
+                                    fit: BoxFit.contain,
+                                    width:
+                                        MediaQuery.of(context).size.width * 0.6,
+                                    height: MediaQuery.of(context).size.height *
+                                        0.4,
                                   ),
                                 ),
                               ],
+                            )
+                          : Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16.0),
+                              child: ListView.builder(
+                                itemCount: filteredRevenues.length,
+                                itemBuilder: (context, index) {
+                                  final revenue = filteredRevenues[index];
+                                  return Column(
+                                    children: [
+                                      GestureDetector(
+                                        onTap: () =>
+                                            _showTransactionDetailPopup(
+                                                context, revenue),
+                                        child: InfoBox(
+                                          title:
+                                              revenue.description ?? 'Receita',
+                                          description:
+                                              'R\$ ${revenue.amount.toStringAsFixed(2)}',
+                                          creationDate:
+                                              revenue.formattedTransactionDate,
+                                          showBadge: false,
+                                          borderColor: const Color(0xFF3D5936),
+                                          badgeColor: const Color(0xFF3D5936),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                    ],
+                                  );
+                                },
+                              ),
                             ),
-                          ),
-              ),
-              const Footer(backgroundColor: Color(0xFF3D5936)),
-            ],
-          ),
-          Positioned(
-            bottom: 30,
-            left: MediaQuery.of(context).size.width / 2 - 30,
-            child: RoundButton(
-              icon: Icons.add,
-              backgroundColor: Colors.white,
-              borderColor: const Color(0xFF3D5936),
-              iconColor: const Color(0xFF3D5936),
-              onPressed: _showAddTransactionPopup,
+                ),
+                const Footer(backgroundColor: Color(0xFF3D5936)),
+              ],
             ),
-          ),
-        ],
+            Positioned(
+              bottom: 30,
+              left: MediaQuery.of(context).size.width / 2 - 30,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  RoundButton(
+                    icon: Icons.add,
+                    backgroundColor: Colors.white,
+                    borderColor: const Color(0xFF3D5936),
+                    iconColor: const Color(0xFF3D5936),
+                    onPressed: _showAddTransactionPopup,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

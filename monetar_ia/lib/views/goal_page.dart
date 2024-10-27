@@ -38,26 +38,22 @@ class _GoalPageState extends State<GoalPage> {
       if (await _tokenStorage.isTokenValid()) {
         goals = await _requestHttp.getGoals();
 
-        // Verifica se há um termo de busca e filtra as metas
         if (searchTerm != null && searchTerm.isNotEmpty) {
           _filterGoals(searchTerm);
         } else {
           _filterGoals('');
         }
 
-        // Filtrando metas até o último dia do mês selecionado
         DateTime(selectedDate.year, selectedDate.month, 1);
         DateTime lastDayOfSelectedMonth =
             DateTime(selectedDate.year, selectedDate.month + 1, 0);
 
-        // Filtra as metas até o último dia do mês selecionado
         filteredGoals = goals.where((goal) {
           return goal.createdAt.isBefore(
             lastDayOfSelectedMonth.add(const Duration(days: 1)),
           );
         }).toList();
 
-        // Ordena as metas pela data de criação
         filteredGoals.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       } else {
         print("Token não está disponível. Faça login novamente.");
@@ -71,7 +67,6 @@ class _GoalPageState extends State<GoalPage> {
     }
   }
 
-  // Função para filtrar as metas com base no termo de busca
   void _filterGoals(String searchTerm) {
     setState(() {
       if (searchTerm.isEmpty) {
@@ -109,7 +104,9 @@ class _GoalPageState extends State<GoalPage> {
   void _showAddGoalPopup() {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (
+        BuildContext context,
+      ) {
         return AddGoalPopup(
           onSave: (name, targetAmount, currentAmount, description, deadline) {
             print(
@@ -127,8 +124,8 @@ class _GoalPageState extends State<GoalPage> {
       builder: (BuildContext context) {
         return GoalDetailPopup(
           goal: goal,
-          onEdit: (editedGoal) {},
-          onDelete: (goalId) {},
+          onEditGoal: (editedGoal) {},
+          onDeleteGoal: (goalId) {},
         );
       },
     );
@@ -156,98 +153,92 @@ class _GoalPageState extends State<GoalPage> {
       child: Scaffold(
         body: Stack(
           children: [
-            Container(
-              color: Colors.white,
-              child: Column(
-                children: [
-                  HeaderAdd(
-                    month: monthDisplay,
-                    onPrevMonth: _onPrevMonth,
-                    onNextMonth: _onNextMonth,
-                    onDateChanged: _onDateChanged,
-                    backgroundColor: const Color(0xFF003566),
-                    circleIcon: Icons.emoji_events,
-                    circleIconColor: Colors.white,
-                    circleBackgroundColor: const Color(0xFF003566),
-                    label: 'Metas até $monthDisplay',
-                    value: 'R\$ ${_calculateTotalGoals().toStringAsFixed(2)}',
-                    onSearch: _filterGoals,
-                  ),
-                  Expanded(
-                    child: _isLoading
-                        ? const Center(
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color(0xFF003566)),
-                            ),
-                          )
-                        : filteredGoals.isEmpty
-                            ? Stack(
+            Column(
+              children: [
+                HeaderAdd(
+                  month: monthDisplay,
+                  onPrevMonth: _onPrevMonth,
+                  onNextMonth: _onNextMonth,
+                  onDateChanged: _onDateChanged,
+                  backgroundColor: const Color(0xFF003566),
+                  circleIcon: Icons.emoji_events,
+                  circleIconColor: Colors.white,
+                  circleBackgroundColor: const Color(0xFF003566),
+                  label: 'Metas até $monthDisplay',
+                  value: 'R\$ ${_calculateTotalGoals().toStringAsFixed(2)}',
+                  onSearch: _filterGoals,
+                ),
+                Expanded(
+                  child: _isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Color(0xFF003566)),
+                          ),
+                        )
+                      : filteredGoals.isEmpty
+                          ? Stack(
+                              children: [
+                                Positioned.fill(
+                                  child: Image.asset(
+                                    'lib/assets/fundo_metas3.png',
+                                    fit: BoxFit.contain,
+                                    width:
+                                        MediaQuery.of(context).size.width * 0.6,
+                                    height: MediaQuery.of(context).size.height *
+                                        0.4,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : SingleChildScrollView(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  Positioned.fill(
-                                    child: Image.asset(
-                                      'lib/assets/fundo_metas2.png',
-                                      fit: BoxFit.contain,
-                                      width: MediaQuery.of(context).size.width *
-                                          0.6,
-                                      height:
-                                          MediaQuery.of(context).size.height *
-                                              0.4,
+                                  const SizedBox(height: 16),
+                                  WhiteCard(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16.0),
+                                      child: Column(
+                                        children: filteredGoals.map((goal) {
+                                          return Column(
+                                            children: [
+                                              GestureDetector(
+                                                onTap: () =>
+                                                    _showGoalDetailPopup(
+                                                        context, goal),
+                                                child: InfoBox(
+                                                  title: goal.name,
+                                                  description:
+                                                      'R\$ ${goal.targetAmount.toStringAsFixed(2)}',
+                                                  showBadge: true,
+                                                  percentage:
+                                                      '${goal.percentage}%',
+                                                  borderColor:
+                                                      const Color(0xFF003566),
+                                                  badgeColor:
+                                                      const Color(0xFF003566),
+                                                  creationDate: DateFormat(
+                                                          'dd/MM/yyyy')
+                                                      .format(goal.createdAt),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 16),
+                                            ],
+                                          );
+                                        }).toList(),
+                                      ),
                                     ),
                                   ),
                                 ],
-                              )
-                            : SingleChildScrollView(
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    const SizedBox(height: 16),
-                                    WhiteCard(
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 16.0),
-                                        child: Column(
-                                          children: filteredGoals.map((goal) {
-                                            return Column(
-                                              children: [
-                                                GestureDetector(
-                                                  onTap: () =>
-                                                      _showGoalDetailPopup(
-                                                          context, goal),
-                                                  child: InfoBox(
-                                                    item: goal,
-                                                    title: goal.name,
-                                                    description:
-                                                        'R\$ ${goal.targetAmount.toStringAsFixed(2)}',
-                                                    showBadge: true,
-                                                    percentage:
-                                                        '${goal.percentage}%',
-                                                    borderColor:
-                                                        const Color(0xFF003566),
-                                                    badgeColor:
-                                                        const Color(0xFF003566),
-                                                    creationDate: DateFormat(
-                                                            'dd/MM/yyyy')
-                                                        .format(goal.createdAt),
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 16),
-                                              ],
-                                            );
-                                          }).toList(),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
                               ),
-                  ),
-                  const Footer(
-                    backgroundColor: Color(0xFF003566),
-                  ),
-                ],
-              ),
+                            ),
+                ),
+                const Footer(
+                  backgroundColor: Color(0xFF003566),
+                ),
+              ],
             ),
             Positioned(
               bottom: 30,
