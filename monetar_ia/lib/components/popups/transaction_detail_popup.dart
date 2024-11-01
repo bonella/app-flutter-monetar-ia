@@ -1,38 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:monetar_ia/services/request_http.dart';
 import 'package:monetar_ia/models/transaction.dart';
 import 'package:monetar_ia/models/category.dart';
+import 'package:monetar_ia/views/revenue_page.dart';
 
 class TransactionDetailPopup extends StatefulWidget {
   final Transaction transaction;
-  final Function(String, String, double, String, String, DateTime) onUpdate;
-  final Function(String) onDelete;
+  final Function(String, String, double, String, String, DateTime)
+      onUpdateTransaction;
+  final Function(String) onDeleteTransaction;
   final Future<List<Category>> Function() loadCategories;
 
   const TransactionDetailPopup({
     super.key,
     required this.transaction,
-    required this.onUpdate,
-    required this.onDelete,
+    required this.onUpdateTransaction,
+    required this.onDeleteTransaction,
     required this.loadCategories,
   });
 
   @override
-  _TransactionDetailPopup createState() => _TransactionDetailPopup();
+  _TransactionDetailPopupState createState() => _TransactionDetailPopupState();
 }
 
-class _TransactionDetailPopup extends State<TransactionDetailPopup> {
+class _TransactionDetailPopupState extends State<TransactionDetailPopup> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController amountController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
+
   String description = '';
   double amount = 0.0;
   DateTime? transactionDate;
   int? selectedCategoryId;
   List<Category> categories = [];
-
-  final TextEditingController amountController = TextEditingController();
-  final TextEditingController descriptionController = TextEditingController();
-
   bool _isEditing = false;
 
   @override
@@ -51,7 +51,7 @@ class _TransactionDetailPopup extends State<TransactionDetailPopup> {
 
   Future<void> _fetchCategories() async {
     try {
-      final List<Category> fetchedCategories = await widget.loadCategories();
+      final fetchedCategories = await widget.loadCategories();
       setState(() {
         categories = fetchedCategories;
       });
@@ -63,42 +63,50 @@ class _TransactionDetailPopup extends State<TransactionDetailPopup> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Column(
-        children: [
-          _buildImage(),
-          const SizedBox(height: 8),
-          Text(
-            widget.transaction.type == 'INCOME'
-                ? 'Detalhes da Receita'
-                : 'Detalhes da Despesa',
-            style: const TextStyle(color: Color(0xFF003566)),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-      content: SingleChildScrollView(
-        child: SizedBox(
-          width: 400,
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildEditableRow('Valor (R\$):', amountController,
-                    isNumeric: true),
-                _buildDropdownRow('Categoria:', selectedCategoryId),
-                _buildEditableRow('Descrição:', descriptionController),
-                _buildFixedRow('Criado em:',
-                    DateFormat('dd/MM/yyyy').format(transactionDate!)),
-                const Divider(thickness: 5, color: Colors.grey),
-              ],
-            ),
-          ),
-        ),
-      ),
+      title: _buildTitle(),
+      content: _buildContent(),
       actions: _buildActionButtons(context),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15),
+      ),
+    );
+  }
+
+  Widget _buildTitle() {
+    return Column(
+      children: [
+        _buildImage(),
+        const SizedBox(height: 8),
+        Text(
+          widget.transaction.type == 'INCOME'
+              ? 'Detalhes da Receita'
+              : 'Detalhes da Despesa',
+          style: const TextStyle(color: Color(0xFF003566)),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContent() {
+    return SingleChildScrollView(
+      child: SizedBox(
+        width: 400,
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildEditableRow('Valor (R\$):', amountController,
+                  isNumeric: true),
+              _buildDropdownRow('Categoria:', selectedCategoryId),
+              _buildEditableRow('Descrição:', descriptionController),
+              _buildFixedRow('Criado em:',
+                  DateFormat('dd/MM/yyyy').format(transactionDate!)),
+              const Divider(thickness: 5, color: Colors.grey),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -123,29 +131,18 @@ class _TransactionDetailPopup extends State<TransactionDetailPopup> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           TextButton(
-            onPressed: () {
-              _confirmDelete(context);
-            },
-            child: const Text(
-              'Excluir',
-              style: TextStyle(color: Colors.red),
-            ),
+            onPressed: () => _confirmDelete(context),
+            child: const Text('Excluir', style: TextStyle(color: Colors.red)),
           ),
           TextButton(
             onPressed: _toggleEdit,
-            child: Text(
-              _isEditing ? 'Salvar' : 'Editar',
-              style: const TextStyle(color: Color(0xFF003566)),
-            ),
+            child: Text(_isEditing ? 'Salvar' : 'Editar',
+                style: const TextStyle(color: Color(0xFF003566))),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text(
-              'Fechar',
-              style: TextStyle(color: Color(0xFF003566)),
-            ),
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Fechar',
+                style: TextStyle(color: Color(0xFF003566))),
           ),
         ],
       ),
@@ -162,23 +159,15 @@ class _TransactionDetailPopup extends State<TransactionDetailPopup> {
           decoration: BoxDecoration(
             border: _isEditing
                 ? const Border(
-                    bottom: BorderSide(
-                      color: Colors.grey,
-                      width: 1.0,
-                    ),
-                  )
+                    bottom: BorderSide(color: Colors.grey, width: 1.0))
                 : null,
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                '$label ',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
+              Text('$label ',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 16)),
               Expanded(
                 child: TextField(
                   controller: controller,
@@ -187,26 +176,19 @@ class _TransactionDetailPopup extends State<TransactionDetailPopup> {
                       ? const TextInputType.numberWithOptions(decimal: true)
                       : TextInputType.text,
                   style: TextStyle(
-                    fontSize: 14,
-                    color: _isEditing ? Colors.grey : Colors.black,
-                  ),
+                      fontSize: 14,
+                      color: _isEditing ? Colors.grey : Colors.black),
                   decoration: InputDecoration(
                     isDense: true,
                     hintText: _isEditing ? 'Digite $label' : '',
                     hintStyle: const TextStyle(
-                      fontSize: 14,
-                      color: Color.fromARGB(115, 34, 34, 34),
-                    ),
+                        fontSize: 14, color: Color.fromARGB(115, 34, 34, 34)),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.only(bottom: 0),
                   ),
                 ),
               ),
-              if (_isEditing)
-                const Icon(
-                  Icons.edit,
-                  color: Color(0xFF003566),
-                ),
+              if (_isEditing) const Icon(Icons.edit, color: Color(0xFF003566)),
             ],
           ),
         ),
@@ -220,22 +202,12 @@ class _TransactionDetailPopup extends State<TransactionDetailPopup> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            '$label ',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
+          Text('$label ',
+              style:
+                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.black,
-              ),
-            ),
-          ),
+              child: Text(value,
+                  style: const TextStyle(fontSize: 14, color: Colors.black))),
         ],
       ),
     );
@@ -247,24 +219,15 @@ class _TransactionDetailPopup extends State<TransactionDetailPopup> {
       child: Container(
         decoration: BoxDecoration(
           border: _isEditing
-              ? const Border(
-                  bottom: BorderSide(
-                    color: Colors.grey,
-                    width: 1.0,
-                  ),
-                )
+              ? const Border(bottom: BorderSide(color: Colors.grey, width: 1.0))
               : null,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              '$label ',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
+            Text('$label ',
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             Expanded(
               child: DropdownButton<int>(
                 value: selectedValue,
@@ -282,10 +245,8 @@ class _TransactionDetailPopup extends State<TransactionDetailPopup> {
                     child: Text(
                       category.name,
                       style: TextStyle(
-                        fontSize: 14,
-                        color: _isEditing ? Colors.grey : Colors.black,
-                        fontWeight: FontWeight.normal,
-                      ),
+                          fontSize: 14,
+                          color: _isEditing ? Colors.grey : Colors.black),
                     ),
                   );
                 }).toList(),
@@ -315,21 +276,33 @@ class _TransactionDetailPopup extends State<TransactionDetailPopup> {
           try {
             double parsedAmount =
                 double.parse(amountController.text.replaceAll(',', '.'));
-            widget.onUpdate(
-              widget.transaction.id.toString(),
-              descriptionController.text,
-              parsedAmount,
-              widget.transaction.type,
-              selectedCategoryId.toString(),
-              transactionDate ?? DateTime.now(),
-            );
-            Navigator.of(context).pop();
+            if (selectedCategoryId != null) {
+              String transactionType = widget.transaction.type;
+
+              widget.onUpdateTransaction(
+                widget.transaction.id.toString(),
+                selectedCategoryId.toString(),
+                parsedAmount,
+                transactionType,
+                descriptionController.text,
+                transactionDate ?? DateTime.now(),
+              );
+              Navigator.of(context).pop();
+            } else {
+              _showError('Selecione uma categoria válida.');
+            }
           } catch (e) {
             print('Erro ao converter valor: $e');
           }
         }
       }
     });
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
   }
 
   void _confirmDelete(BuildContext context) {
@@ -343,9 +316,13 @@ class _TransactionDetailPopup extends State<TransactionDetailPopup> {
           actions: [
             TextButton(
               onPressed: () {
-                widget.onDelete(widget.transaction.id.toString());
+                widget.onDeleteTransaction(widget.transaction.id.toString());
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const RevenuePage()),
+                );
               },
               child: const Text('Sim', style: TextStyle(color: Colors.red)),
             ),

@@ -59,6 +59,7 @@ class Transaction {
   // Método para converter a instância para JSON
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'user_id': userId,
       'amount': amount,
       'type': type,

@@ -6,7 +6,6 @@ import 'package:monetar_ia/views/home_page.dart';
 import 'package:monetar_ia/services/auth_service.dart';
 import 'package:monetar_ia/utils/form_validations.dart';
 import 'dart:io';
-import 'package:monetar_ia/services/token_storage.dart';
 
 class CardBtnLogin extends StatefulWidget {
   const CardBtnLogin({super.key});
@@ -73,25 +72,31 @@ class _CardBtnLoginState extends State<CardBtnLogin>
       final password = _passwordController.text;
 
       try {
+        // Solicita o token ao realizar o login
         await AuthService().signin(
           email: email,
           password: password,
         );
 
-        final token = await TokenStorage().getToken();
-
-        if (token == null) {
-          throw Exception('Token não encontrado após o login.');
-        }
-
+        // Valida o token obtido sem armazená-lo
+        final isTokenValid = await AuthService().isTokenValid();
         _spinController.stop();
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const HomePage(),
-          ),
-        );
+        if (isTokenValid) {
+          // Navega para a HomePage se o token for válido
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const HomePage(),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Erro: Token inválido. Faça login novamente.'),
+            ),
+          );
+        }
       } on SocketException catch (_) {
         _spinController.stop();
         ScaffoldMessenger.of(context).showSnackBar(

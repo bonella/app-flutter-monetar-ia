@@ -1,52 +1,38 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 class TokenStorage {
+  final String _baseUrl = 'https://testeapi.monetaria.app.br';
+
   // Salva o token
   Future<void> saveToken(String token) async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('auth_token', token);
-      print("Token salvo: $token");
-    } catch (e) {
-      print("Erro ao salvar o token: $e");
-    }
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_token', token);
   }
 
   // Obtém o token
   Future<String?> getToken() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
-      // print("Token recuperado: $token"); // Print para o token recuperado
-      return token;
-    } catch (e) {
-      print("Erro ao obter o token: $e");
-      return null;
-    }
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token');
   }
 
   // Limpa o token
   Future<void> clearToken() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.remove('auth_token');
-      // print("Token limpo."); // Print após limpar
-    } catch (e) {
-      print("Erro ao limpar o token: $e");
-    }
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
   }
 
-  // Verifica se o token é válido
+  // Verifica se o token é válido utilizando a rota /me
   Future<bool> isTokenValid() async {
     final token = await getToken();
-    final isValid = token != null;
-    // print("Token é válido? $isValid");
-    return isValid;
-  }
+    if (token == null || token.isEmpty) return false;
 
-  // Método opcional para exibir o token (útil para debugging)
-  Future<void> printToken() async {
-    final token = await getToken();
-    print("Token atual: $token");
+    final url = Uri.parse('$_baseUrl/me');
+    final response = await http.get(url, headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    });
+
+    return response.statusCode == 200;
   }
 }

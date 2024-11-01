@@ -18,6 +18,7 @@ import 'package:monetar_ia/models/goal.dart';
 import 'package:monetar_ia/models/transaction.dart';
 import 'package:monetar_ia/services/request_http.dart';
 import 'package:intl/intl.dart';
+import 'package:monetar_ia/utils/calculate_total.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -31,6 +32,10 @@ class _HomePageState extends State<HomePage> {
   String userName = '';
   Transaction? lastTransaction;
   Goal? lastGoal;
+  double totalRevenue = 0.0;
+  double totalExpense = 0.0;
+  List<Transaction> revenues = [];
+
   final RequestHttp _requestHttp = RequestHttp();
 
   @override
@@ -38,36 +43,116 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _showStayConnectedDialog();
     _loadUserName();
-    _loadLatestTransaction();
+    _loadTotalRevenue();
+    _loadTotalExpense();
+    _loadLatestRevenue();
     ();
-    _loadLastGoal();
+    _loadLatestGoal();
   }
 
   Future<void> _loadUserName() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? name = prefs.getString('userName');
-    setState(() {
-      userName = name ?? 'Usuário';
-    });
+    try {
+      String? name = await _requestHttp.getUserName();
+      setState(() {
+        userName = name ?? 'Usuário';
+      });
+    } catch (e) {
+      print('Erro ao carregar o nome do usuário: $e');
+    }
   }
 
-  Future<void> _loadLatestTransaction() async {
+  void _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _loadTotalRevenue() async {
     try {
-      var response = await _requestHttp.get('/transactions');
+      DateTime firstDayOfMonth =
+          DateTime(selectedDate.year, selectedDate.month, 1);
+      DateTime lastDayOfMonth =
+          DateTime(selectedDate.year, selectedDate.month + 1, 0);
+
+      totalRevenue = 0.0;
+
+      var response = await _requestHttp.get(
+          'transactions/revenues?start_date=${firstDayOfMonth.toIso8601String()}&end_date=${lastDayOfMonth.toIso8601String()}');
       if (response.statusCode == 200) {
         List<dynamic> decodedResponse = json.decode(response.body);
-
         List<Transaction> transactions =
             decodedResponse.map((data) => Transaction.fromJson(data)).toList();
 
-        if (transactions.isNotEmpty) {
+        if (transactions.any((transaction) =>
+            transaction.transactionDate.year == selectedDate.year &&
+            transaction.transactionDate.month == selectedDate.month)) {
+          totalRevenue = calculateTotalRevenues(transactions);
+        } else {
+          totalRevenue = 0.0;
+        }
+
+        setState(() {});
+      } else {
+        print('Erro ao carregar as receitas: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Erro ao carregar as receitas: $e');
+    }
+  }
+
+  Future<void> _loadTotalExpense() async {
+    try {
+      DateTime firstDayOfMonth =
+          DateTime(selectedDate.year, selectedDate.month, 1);
+      DateTime lastDayOfMonth =
+          DateTime(selectedDate.year, selectedDate.month + 1, 0);
+
+      totalExpense = 0.0;
+
+      var response = await _requestHttp.get(
+          'transactions/expenses?start_date=${firstDayOfMonth.toIso8601String()}&end_date=${lastDayOfMonth.toIso8601String()}');
+      if (response.statusCode == 200) {
+        List<dynamic> decodedResponse = json.decode(response.body);
+        List<Transaction> transactions =
+            decodedResponse.map((data) => Transaction.fromJson(data)).toList();
+
+        if (transactions.any((transaction) =>
+            transaction.transactionDate.year == selectedDate.year &&
+            transaction.transactionDate.month == selectedDate.month)) {
+          totalExpense = calculateTotalExpenses(transactions);
+        } else {
+          totalExpense = 0.0;
+        }
+
+        setState(() {});
+      } else {
+        print('Erro ao carregar as despesas: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Erro ao carregar as despesas: $e');
+    }
+  }
+
+  Future<void> _loadLatestRevenue() async {
+    try {
+      var response = await _requestHttp.get('transactions/revenues');
+      if (response.statusCode == 200) {
+        List<dynamic> decodedResponse = json.decode(response.body);
+        List<Transaction> transactions =
+            decodedResponse.map((data) => Transaction.fromJson(data)).toList();
+
+        List<Transaction> filteredTransactions =
+            transactions.where((transaction) {
+          return transaction.transactionDate.year == selectedDate.year;
+        }).toList();
+
+        if (filteredTransactions.isEmpty) {
           lastTransaction = transactions.reduce(
               (a, b) => a.transactionDate.isAfter(b.transactionDate) ? a : b);
-
-          setState(() {});
         } else {
-          print('Nenhuma transação encontrada.');
+          lastTransaction = filteredTransactions.reduce(
+              (a, b) => a.transactionDate.isAfter(b.transactionDate) ? a : b);
         }
+        setState(() {});
       } else {
         print('Erro ao carregar as transações: ${response.statusCode}');
       }
@@ -76,16 +161,31 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> _loadLastGoal() async {
+  Future<void> _loadLatestGoal() async {
     try {
-      var response = await _requestHttp.get('goals?limit=1');
+      var response = await _requestHttp.get('goals/');
       if (response.statusCode == 200) {
-        var decodedResponse = json.decode(response.body);
-        lastGoal = Goal.fromJson(decodedResponse[0]);
+        List<dynamic> decodedResponse = json.decode(response.body);
+        List<Goal> goals =
+            decodedResponse.map((data) => Goal.fromJson(data)).toList();
+
+        List<Goal> filteredGoals = goals.where((goal) {
+          return goal.createdAt.year == selectedDate.year;
+        }).toList();
+
+        if (filteredGoals.isEmpty) {
+          lastGoal =
+              goals.reduce((a, b) => a.createdAt.isAfter(b.createdAt) ? a : b);
+        } else {
+          lastGoal = filteredGoals
+              .reduce((a, b) => a.createdAt.isAfter(b.createdAt) ? a : b);
+        }
         setState(() {});
+      } else {
+        print('Erro ao carregar as metas: ${response.statusCode}');
       }
     } catch (e) {
-      print('Erro ao carregar a última meta: $e');
+      print('Erro ao carregar as metas: $e');
     }
   }
 
@@ -178,9 +278,15 @@ class _HomePageState extends State<HomePage> {
                       onDateChanged: (DateTime newDate) {
                         setState(() {
                           selectedDate = newDate;
+                          print('Data selecionada: $selectedDate');
+
+                          _loadTotalRevenue();
+                          _loadTotalExpense();
                         });
                       },
                     ),
+                    totalRevenue: totalRevenue,
+                    totalExpense: totalExpense,
                     onPrevMonth: () {},
                     onNextMonth: () {},
                   ),
@@ -198,9 +304,9 @@ class _HomePageState extends State<HomePage> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 16.0, vertical: 8.0),
                                   child: InfoBox(
-                                    item: lastTransaction,
-                                    title: lastTransaction?.description ??
-                                        'Último Registro',
+                                    title: lastTransaction?.description != null
+                                        ? 'Última Receita: ${lastTransaction!.description}'
+                                        : 'Sem Receitas',
                                     description: lastTransaction != null
                                         ? 'R\$ ${lastTransaction!.amount.toStringAsFixed(2)}'
                                         : '',
@@ -214,11 +320,16 @@ class _HomePageState extends State<HomePage> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 16.0, vertical: 8.0),
                                   child: InfoBox(
-                                    item: lastGoal,
-                                    title: lastGoal?.name ?? 'Última Meta',
+                                    title: lastGoal?.name != null
+                                        ? 'Última Meta: ${lastGoal!.name}'
+                                        : 'Sem Metas',
                                     description: lastGoal != null
-                                        ? 'R\$ ${lastGoal!.currentAmount.toStringAsFixed(2)} / ${lastGoal!.targetAmount.toStringAsFixed(2)} (${((lastGoal!.currentAmount / lastGoal!.targetAmount) * 100).toStringAsFixed(0)}%)'
-                                        : '',
+                                        ? 'R\$ ${lastGoal!.targetAmount.toStringAsFixed(2)}'
+                                        : 'R\$ 0.00',
+                                    showBadge: lastGoal != null,
+                                    percentage: lastGoal != null
+                                        ? '${lastGoal!.percentage}%'
+                                        : '0%',
                                     creationDate: lastGoal != null
                                         ? DateFormat('dd/MM/yyyy')
                                             .format(lastGoal!.createdAt)
@@ -233,12 +344,12 @@ class _HomePageState extends State<HomePage> {
                                     height: 300,
                                     child: PageView(
                                       children: const [
-                                        LineGraphic(title: 'Últimas compras'),
+                                        LineGraphic(title: 'Dez últimos'),
                                         CustomPieChart(
-                                            title: 'Distribuição de despesas'),
-                                        ColumnChart(
                                             title:
-                                                'Comparativo de receitas e despesas'),
+                                                'Distribuição de transações no mês'),
+                                        ColumnChart(
+                                            title: 'Comparativo entre ano'),
                                       ],
                                     ),
                                   ),
