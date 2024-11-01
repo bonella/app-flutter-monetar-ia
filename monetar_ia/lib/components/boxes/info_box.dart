@@ -9,6 +9,7 @@ class InfoBox extends StatelessWidget {
   final Color badgeColor;
   final String creationDate;
   final VoidCallback? onTap;
+  final bool isEditable;
 
   const InfoBox({
     super.key,
@@ -20,6 +21,7 @@ class InfoBox extends StatelessWidget {
     this.badgeColor = const Color(0xFF3D5936),
     required this.creationDate,
     this.onTap,
+    this.isEditable = false,
   });
 
   @override

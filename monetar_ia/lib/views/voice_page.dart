@@ -1,10 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:speech_to_text/speech_to_text.dart';
-import 'package:monetar_ia/components/headers/header_first_steps.dart';
 import 'package:monetar_ia/components/footers/footer.dart';
 import 'package:monetar_ia/components/cards/white_card.dart';
 import 'package:monetar_ia/components/buttons/round_btn.dart';
+import 'package:monetar_ia/services/request_http.dart';
 
 class VoicePage extends StatefulWidget {
   const VoicePage({super.key});
@@ -19,6 +19,7 @@ class _VoicePageState extends State<VoicePage> {
   TextEditingController message = TextEditingController();
   List<String> historic = [];
   final ScrollController _scrollController = ScrollController();
+  final RequestHttp requestHttp = RequestHttp();
 
   @override
   void initState() {
@@ -36,16 +37,37 @@ class _VoicePageState extends State<VoicePage> {
   }
 
   Future<void> sendMessage(String text) async {
-    var model = GenerativeModel(
-        model: 'gemini-1.5-flash',
-        apiKey: 'AIzaSyDVtWjFoY9bBwKB4uUkhWMg2AT2-Y7aW5U');
-    var content = [Content.text(text)];
-    var response = await model.generateContent(content);
+    try {
+      print('Enviando mensagem: $text'); // Verificar msg enviada
+      var response = await requestHttp.chatWithAI(text);
 
-    if (response.text != null) {
-      historic.add(response.text!);
+      print('Resposta da API: ${response.body}'); // Verifica a resposta da API
+
+      if (response.statusCode == 200) {
+        var responseData = json.decode(response.body);
+
+        // Verifica se "texto_gerado_ia" está presente e se não é nulo
+        if (responseData['texto_gerado_ia'] != null) {
+          // Decodifica o JSON contido na string
+          var innerResponse = json.decode(responseData['texto_gerado_ia']);
+          String aiResponse = innerResponse['response'];
+
+          // Verifica se aiResponse não é nulo
+          historic.add(aiResponse);
+          _scrollToBottom();
+          await _typeResponse(aiResponse);
+        } else {
+          historic.add('Erro: texto_gerado_ia é nulo');
+          _scrollToBottom();
+        }
+      } else {
+        historic.add('Erro: ${response.statusCode}');
+        _scrollToBottom();
+      }
+    } catch (e) {
+      print('Erro ao enviar mensagem: $e');
+      historic.add('Erro ao enviar mensagem: $e');
       _scrollToBottom();
-      await _typeResponse(response.text!);
     }
   }
 
@@ -78,10 +100,79 @@ class _VoicePageState extends State<VoicePage> {
         children: [
           Column(
             children: [
-              const HeaderFirstSteps(
-                title: 'Monetar.ia',
-                subtitle: 'Assistente Monetar.ia',
-                backgroundColor: Color(0xFF697077),
+              Container(
+                color: const Color(0xFF697077),
+                padding: const EdgeInsets.symmetric(vertical: 40),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white,
+                              border: Border.all(color: Colors.white, width: 2),
+                            ),
+                            child: ClipOval(
+                              child: Image.asset(
+                                'lib/assets/logo2.png',
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Monetar.IA',
+                            style: TextStyle(
+                              fontFamily: 'Kumbh Sans',
+                              fontSize: 32,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'Como posso ajudar? ',
+                            style: TextStyle(
+                              fontFamily: 'Kumbh Sans',
+                              fontSize: 18,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            width: 60,
+                            height: 60,
+                            child: Image.asset(
+                              'lib/assets/monetar_rosto.png',
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                height: 10,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF697077),
+                  borderRadius:
+                      BorderRadius.vertical(bottom: Radius.circular(20)),
+                ),
               ),
               Expanded(
                 child: Container(
@@ -104,11 +195,11 @@ class _VoicePageState extends State<VoicePage> {
                                 padding: const EdgeInsets.symmetric(
                                     vertical: 12, horizontal: 20),
                                 decoration: BoxDecoration(
-                                    color: (index % 2) == 0
-                                        ? const Color.fromARGB(
-                                            208, 165, 163, 163)
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(12)),
+                                  color: (index % 2) == 0
+                                      ? const Color.fromARGB(208, 165, 163, 163)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                                 child: Text(
                                   historic[index],
                                   style:
@@ -132,8 +223,8 @@ class _VoicePageState extends State<VoicePage> {
                                 Expanded(
                                   child: TextField(
                                     controller: message,
-                                    textCapitalization: TextCapitalization
-                                        .sentences, // Capitalização
+                                    textCapitalization:
+                                        TextCapitalization.sentences,
                                     decoration: InputDecoration(
                                         border: const OutlineInputBorder(),
                                         suffixIcon: IconButton(

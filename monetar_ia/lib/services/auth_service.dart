@@ -127,27 +127,25 @@ class AuthService {
     }
   }
 
-  // Função para renovar o token
-  Future<void> refreshAccessToken(String refreshToken) async {
-    final url =
-        Uri.parse('$_baseUrl/token/refresh'); // Altere para o endpoint correto
+  // Função para verificar a validade do token usando o endpoint /me
+  Future<bool> isTokenValid() async {
+    final token = await _tokenStorage.getToken();
 
-    final response = await http.post(
-      url,
+    if (token == null) return false;
+
+    final response = await http.get(
+      Uri.parse('$_baseUrl/me'),
       headers: {
-        "Content-Type": "application/json",
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
       },
-      body: json.encode({
-        'refresh_token': refreshToken,
-      }),
     );
 
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> jsonResponse = json.decode(response.body);
-      String newAccessToken = jsonResponse['access_token'];
-      await _tokenStorage.saveToken(newAccessToken);
-    } else {
-      throw Exception('Erro ao renovar token: ${response.body}');
-    }
+    return response.statusCode == 200;
+  }
+
+  Future<String?> getAuthToken() async {
+    // Método que retorna o token de autenticação, se disponível
+    return await _tokenStorage.getToken();
   }
 }

@@ -1,4 +1,5 @@
 import 'package:http/http.dart' as http;
+import 'package:monetar_ia/services/auth_service.dart';
 import 'dart:convert';
 import 'token_storage.dart';
 import '../models/goal.dart';
@@ -205,5 +206,24 @@ class RequestHttp {
 
   Future<http.Response> deleteCategory(int categoryId) async {
     return await delete('categories/$categoryId');
+  }
+
+  // Método para integrar o chat com IA
+  Future<http.Response> chatWithAI(String texto) async {
+    final token = await AuthService().getAuthToken();
+
+    // Configure a URL da API
+    final url = '$_baseUrl/chat/ia/$texto';
+
+    // Faça a requisição GET
+    final response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'bearer $token',
+        'Accept': 'application/json',
+      },
+    );
+
+    return _handleResponse(response);
   }
 }

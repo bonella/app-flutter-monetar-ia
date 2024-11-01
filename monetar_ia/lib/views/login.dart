@@ -21,17 +21,16 @@ class _LoginPageState extends State<LoginPage> {
     _scrollController.addListener(() {
       if (_scrollController.hasClients) {
         final offset = _scrollController.offset;
-        if (offset > 100) {
-          setState(() {
-            _isBtnScrollVisible = false;
-          });
-        } else {
-          setState(() {
-            _isBtnScrollVisible = true;
-          });
-        }
+        setState(() {
+          _isBtnScrollVisible = offset <= 100;
+        });
       }
     });
+  }
+
+  Future<bool> _onWillPop() async {
+    // Retornar false impede que a página atual seja removida da pilha de navegação.
+    return false;
   }
 
   @override
@@ -41,30 +40,33 @@ class _LoginPageState extends State<LoginPage> {
       DeviceOrientation.portraitDown,
     ]);
 
-    return Scaffold(
-      body: Container(
-        color: const Color(0xFFE4F2E6),
-        child: Column(
-          children: <Widget>[
-            const HeaderLogin(),
-            Expanded(
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    CardTitleLogin(),
-                  ],
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        body: Container(
+          color: const Color(0xFFE4F2E6),
+          child: Column(
+            children: <Widget>[
+              const HeaderLogin(),
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      CardTitleLogin(),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
+        floatingActionButton: _isBtnScrollVisible
+            ? BtnScroll(scrollController: _scrollController)
+            : null,
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       ),
-      floatingActionButton: _isBtnScrollVisible
-          ? BtnScroll(scrollController: _scrollController)
-          : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }
