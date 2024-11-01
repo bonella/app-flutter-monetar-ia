@@ -19,7 +19,7 @@ class HeaderFirstSteps extends StatelessWidget {
       children: [
         Container(
           width: double.infinity,
-          height: 200,
+          height: 300,
           color: Colors.white,
           child: Container(
             width: double.infinity,
@@ -35,12 +35,22 @@ class HeaderFirstSteps extends StatelessWidget {
                   style: const TextStyle(
                     fontFamily: 'Kumbh Sans',
                     fontWeight: FontWeight.w400,
-                    fontSize: 48,
+                    fontSize: 44,
                     letterSpacing: 0.04,
                     color: Colors.white,
                   ),
                   textAlign: TextAlign.center,
                 ),
+                const SizedBox(height: 10),
+                ClipOval(
+                  child: Image.asset(
+                    'lib/assets/logo2.png',
+                    height: 80,
+                    width: 80,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                const SizedBox(height: 10),
                 Text(
                   subtitle,
                   style: const TextStyle(

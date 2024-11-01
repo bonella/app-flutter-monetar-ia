@@ -60,10 +60,8 @@ class _CardRegisterState extends State<CardRegister> {
   void _scrollToFocusedField(FocusNode focusNode) {
     if (focusNode.hasFocus) {
       final renderBox = focusNode.context?.findRenderObject() as RenderBox?;
-
       if (renderBox != null) {
         final offset = renderBox.localToGlobal(Offset.zero).dy;
-
         final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
 
         if (offset + renderBox.size.height >
@@ -91,50 +89,31 @@ class _CardRegisterState extends State<CardRegister> {
           borderRadius: BorderRadius.circular(20),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              _buildLabel('Nome:', context),
-              _buildInput(widget.nameController, validateName, '',
-                  currentFocus: nameFocusNode,
-                  nextFocus: lastNameFocusNode,
-                  isNameField: true),
-              _buildLabel('Sobrenome:', context),
-              _buildInput(widget.lastNameController, validateLastName, '',
-                  currentFocus: lastNameFocusNode,
-                  nextFocus: emailFocusNode,
-                  isNameField: true),
-              _buildLabel('E-mail:', context),
-              _buildInput(widget.emailController, validateEmail, '',
-                  currentFocus: emailFocusNode, nextFocus: passwordFocusNode),
-              _buildLabel('Senha:', context),
+              _buildInput(widget.nameController, validateName, 'Nome',
+                  nameFocusNode, lastNameFocusNode),
+              _buildInput(widget.lastNameController, validateLastName,
+                  'Sobrenome', lastNameFocusNode, emailFocusNode),
+              _buildInput(widget.emailController, validateEmail, 'E-mail',
+                  emailFocusNode, passwordFocusNode),
               _buildPasswordInput(
-                widget.passwordController,
-                validatePassword,
-                isPasswordVisible,
-                currentFocus: passwordFocusNode,
-                nextFocus: confirmPasswordFocusNode,
-                toggleVisibility: () {
-                  setState(() {
-                    isPasswordVisible = !isPasswordVisible;
-                  });
-                },
-              ),
-              _buildLabel('Confirmar Senha:', context),
+                  widget.passwordController,
+                  validatePassword,
+                  isPasswordVisible,
+                  passwordFocusNode,
+                  confirmPasswordFocusNode,
+                  'Senha'),
               _buildPasswordInput(
-                widget.confirmPasswordController,
-                (value) => validateConfirmPassword(
-                    widget.passwordController.text, value),
-                isConfirmPasswordVisible,
-                currentFocus: confirmPasswordFocusNode,
-                nextFocus: null,
-                toggleVisibility: () {
-                  setState(() {
-                    isConfirmPasswordVisible = !isConfirmPasswordVisible;
-                  });
-                },
-              ),
+                  widget.confirmPasswordController,
+                  (value) => validateConfirmPassword(
+                      widget.passwordController.text, value),
+                  isConfirmPasswordVisible,
+                  confirmPasswordFocusNode,
+                  null,
+                  'Confirmar Senha'),
             ],
           ),
         ),
@@ -142,63 +121,44 @@ class _CardRegisterState extends State<CardRegister> {
     );
   }
 
-  Widget _buildLabel(String text, BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 8.0),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontFamily: 'Kumbh Sans',
-          fontWeight: FontWeight.w400,
-          fontSize: 18,
-          color: Color(0xFF3D5936),
-        ),
-        textAlign: TextAlign.left,
-      ),
-    );
-  }
-
   Widget _buildInput(
     TextEditingController controller,
     String? Function(String?) validator,
-    String hint, {
-    required FocusNode currentFocus,
+    String hint,
+    FocusNode currentFocus,
     FocusNode? nextFocus,
-    bool isNameField = false,
-  }) {
+  ) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 16),
       child: TextFormField(
         controller: controller,
         focusNode: currentFocus,
-        textCapitalization:
-            isNameField ? TextCapitalization.words : TextCapitalization.none,
         decoration: InputDecoration(
+          labelText: hint,
+          hintStyle: const TextStyle(color: Colors.grey),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(100),
+            borderRadius: BorderRadius.circular(10),
             borderSide: const BorderSide(
               color: Color(0xFF3D5936),
               width: 2.0,
             ),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(100),
+            borderRadius: BorderRadius.circular(10),
             borderSide: const BorderSide(
-              color: Color(0xFF738C61),
+              color: Color(0xFF3D5936),
               width: 2.0,
             ),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(100),
-            borderSide: const BorderSide(
-              color: Color(0xFF738C61),
-              width: 2.0,
-            ),
+            borderRadius: BorderRadius.circular(10.0),
+            borderSide: const BorderSide(color: Color(0xFF003566), width: 2),
           ),
+          floatingLabelBehavior: FloatingLabelBehavior.never,
           filled: true,
           fillColor: Colors.white,
           contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+              const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         ),
         validator: validator,
         textInputAction:
@@ -217,49 +177,55 @@ class _CardRegisterState extends State<CardRegister> {
   Widget _buildPasswordInput(
     TextEditingController controller,
     String? Function(String?) validator,
-    bool isVisible, {
-    required FocusNode currentFocus,
+    bool isVisible,
+    FocusNode currentFocus,
     FocusNode? nextFocus,
-    required VoidCallback toggleVisibility,
-  }) {
+    String label,
+  ) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 16),
       child: TextFormField(
         controller: controller,
         focusNode: currentFocus,
-        keyboardType: TextInputType.visiblePassword,
         decoration: InputDecoration(
+          labelText: label,
+          hintStyle: const TextStyle(color: Colors.grey),
           suffixIcon: IconButton(
             icon: Icon(
               isVisible ? Icons.visibility : Icons.visibility_off,
             ),
-            onPressed: toggleVisibility,
+            onPressed: () {
+              setState(() {
+                isVisible = !isVisible;
+              });
+            },
           ),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(100),
+            borderRadius: BorderRadius.circular(10),
             borderSide: const BorderSide(
               color: Color(0xFF3D5936),
               width: 2.0,
             ),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(100),
+            borderRadius: BorderRadius.circular(10),
             borderSide: const BorderSide(
-              color: Color(0xFF738C61),
+              color: Color(0xFF3D5936),
               width: 2.0,
             ),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(100),
+            borderRadius: BorderRadius.circular(10),
             borderSide: const BorderSide(
-              color: Color(0xFF738C61),
+              color: Color(0xFF003566),
               width: 2.0,
             ),
           ),
+          floatingLabelBehavior: FloatingLabelBehavior.never,
           filled: true,
           fillColor: Colors.white,
           contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+              const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         ),
         validator: validator,
         obscureText: !isVisible,
