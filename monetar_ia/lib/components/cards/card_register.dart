@@ -94,9 +94,9 @@ class _CardRegisterState extends State<CardRegister> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               _buildInput(widget.nameController, validateName, 'Nome',
-                  nameFocusNode, lastNameFocusNode),
+                  nameFocusNode, lastNameFocusNode, true),
               _buildInput(widget.lastNameController, validateLastName,
-                  'Sobrenome', lastNameFocusNode, emailFocusNode),
+                  'Sobrenome', lastNameFocusNode, emailFocusNode, true),
               _buildInput(widget.emailController, validateEmail, 'E-mail',
                   emailFocusNode, passwordFocusNode),
               _buildPasswordInput(
@@ -105,7 +105,8 @@ class _CardRegisterState extends State<CardRegister> {
                   isPasswordVisible,
                   passwordFocusNode,
                   confirmPasswordFocusNode,
-                  'Senha'),
+                  'Senha',
+                  true),
               _buildPasswordInput(
                   widget.confirmPasswordController,
                   (value) => validateConfirmPassword(
@@ -113,7 +114,8 @@ class _CardRegisterState extends State<CardRegister> {
                   isConfirmPasswordVisible,
                   confirmPasswordFocusNode,
                   null,
-                  'Confirmar Senha'),
+                  'Confirmar Senha',
+                  false),
             ],
           ),
         ),
@@ -126,13 +128,16 @@ class _CardRegisterState extends State<CardRegister> {
     String? Function(String?) validator,
     String hint,
     FocusNode currentFocus,
-    FocusNode? nextFocus,
-  ) {
+    FocusNode? nextFocus, [
+    bool capitalize = false,
+  ]) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: TextFormField(
         controller: controller,
         focusNode: currentFocus,
+        textCapitalization:
+            capitalize ? TextCapitalization.words : TextCapitalization.none,
         decoration: InputDecoration(
           labelText: hint,
           hintStyle: const TextStyle(color: Colors.grey),
@@ -181,12 +186,14 @@ class _CardRegisterState extends State<CardRegister> {
     FocusNode currentFocus,
     FocusNode? nextFocus,
     String label,
+    bool isPrimaryPassword,
   ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: TextFormField(
         controller: controller,
         focusNode: currentFocus,
+        obscureText: !isVisible,
         decoration: InputDecoration(
           labelText: label,
           hintStyle: const TextStyle(color: Colors.grey),
@@ -196,7 +203,11 @@ class _CardRegisterState extends State<CardRegister> {
             ),
             onPressed: () {
               setState(() {
-                isVisible = !isVisible;
+                if (isPrimaryPassword) {
+                  isPasswordVisible = !isPasswordVisible;
+                } else {
+                  isConfirmPasswordVisible = !isConfirmPasswordVisible;
+                }
               });
             },
           ),
@@ -228,7 +239,6 @@ class _CardRegisterState extends State<CardRegister> {
               const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         ),
         validator: validator,
-        obscureText: !isVisible,
         textInputAction:
             nextFocus != null ? TextInputAction.next : TextInputAction.done,
         onFieldSubmitted: (_) {

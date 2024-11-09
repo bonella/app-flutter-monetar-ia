@@ -114,7 +114,7 @@ class _SplashPageState extends State<SplashPage> {
                             ),
                             const SizedBox(height: 8),
                             Image.asset(
-                              'lib/assets/monetar_corpo.png',
+                              'lib/assets/monetar_corpo2.png',
                               height: 300,
                               fit: BoxFit.cover,
                             ),

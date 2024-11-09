@@ -6,6 +6,7 @@ import 'package:monetar_ia/views/home_page.dart';
 import 'package:monetar_ia/services/auth_service.dart';
 import 'package:monetar_ia/utils/form_validations.dart';
 import 'dart:io';
+import 'package:monetar_ia/components/popups/reset_password_popup.dart'; // Importa o popup de redefinição de senha
 
 class CardBtnLogin extends StatefulWidget {
   const CardBtnLogin({super.key});
@@ -264,7 +265,12 @@ class _CardBtnLoginState extends State<CardBtnLogin>
               const SizedBox(height: 36.0),
               TextButton(
                 onPressed: () {
-                  // Ação ao clicar no link "Esqueceu a senha?"
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return const ResetPasswordPopup();
+                    },
+                  );
                 },
                 child: const Text(
                   'Esqueceu a senha?',

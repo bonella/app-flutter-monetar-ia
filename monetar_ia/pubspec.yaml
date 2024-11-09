@@ -38,6 +38,7 @@ flutter:
     - lib/assets/fundo_despesas2.png
     - lib/assets/monetar_rosto.png
     - lib/assets/monetar_corpo.png
+    - lib/assets/monetar_corpo2.png
 
 flutter_icons:
   android: true

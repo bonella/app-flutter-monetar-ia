@@ -2,7 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 class TokenStorage {
-  final String _baseUrl = 'https://testeapi.monetaria.app.br';
+  final String _baseUrl = 'https://api.monetaria.app.br';
 
   // Salva o token
   Future<void> saveToken(String token) async {

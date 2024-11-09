@@ -101,17 +101,11 @@ class _RevenuePageState extends State<RevenuePage> {
             filteredRevenues = List.from(revenues);
             _filterRevenues("");
           });
-        } else {
-          _showErrorSnackbar(
-              'Erro ao carregar receitas: ${response.statusCode}');
-        }
+        } else {}
       } else {
         _showErrorSnackbar('Token não está disponível. Faça login novamente.');
         print("Token não está disponível. Faça login novamente.");
       }
-    } catch (e) {
-      _showErrorSnackbar('Erro ao carregar receitas: $e');
-      print("Erro ao carregar receitas: $e");
     } finally {
       setState(() {
         _isLoading = false;

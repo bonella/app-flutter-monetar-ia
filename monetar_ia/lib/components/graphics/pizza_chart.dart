@@ -1,16 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
-class CustomPieChart extends StatelessWidget {
+class PizzaChart extends StatelessWidget {
+  final double currentMonthRevenue;
+  final double currentMonthExpense;
   final String title;
 
-  const CustomPieChart({
+  const PizzaChart({
     super.key,
     required this.title,
+    required this.currentMonthRevenue,
+    required this.currentMonthExpense,
   });
 
   @override
   Widget build(BuildContext context) {
+    double total = currentMonthRevenue + currentMonthExpense;
+    double revenuePercentage =
+        total > 0 ? (currentMonthRevenue / total) * 100 : 0.0;
+    double expensePercentage =
+        total > 0 ? (currentMonthExpense / total) * 100 : 0.0;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -52,16 +62,28 @@ class CustomPieChart extends StatelessWidget {
                 centerSpaceRadius: 40,
                 sections: [
                   PieChartSectionData(
-                    value: 70,
+                    value: revenuePercentage,
                     color: const Color(0xFF3D5936),
-                    title: 'Receitas',
+                    title: '${revenuePercentage.toStringAsFixed(1)}%',
                     radius: 60,
+                    titleStyle: const TextStyle(
+                      fontFamily: 'Roboto',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
                   ),
                   PieChartSectionData(
-                    value: 30,
+                    value: expensePercentage,
                     color: const Color(0xFF8C1C03),
-                    title: 'Despesas',
+                    title: '${expensePercentage.toStringAsFixed(1)}%',
                     radius: 60,
+                    titleStyle: const TextStyle(
+                      fontFamily: 'Roboto',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
                   ),
                 ],
                 startDegreeOffset: 270,

@@ -7,7 +7,7 @@ import '../models/transaction.dart';
 import '../models/category.dart';
 
 class RequestHttp {
-  final String _baseUrl = 'https://testeapi.monetaria.app.br';
+  final String _baseUrl = 'https://api.monetaria.app.br';
   final TokenStorage _tokenStorage = TokenStorage();
 
   Future<http.Response> _requestWithToken(String method, String endpoint,
@@ -226,4 +226,37 @@ class RequestHttp {
 
     return _handleResponse(response);
   }
+
+  // Método para redefinir a senha do usuário
+  Future<http.Response> updatePassword(String email, String newPassword) async {
+    Map<String, dynamic> data = {
+      "email": email,
+      "new_password": newPassword,
+    };
+
+    return await post('new-password', data);
+  }
+
+  // Método para validar o código de redefinição de senha
+  Future<http.Response> validateResetCode(String email, int resetCode) async {
+    Map<String, dynamic> data = {
+      "email": email,
+      "reset_code": resetCode,
+    };
+
+    return await post('validate-reset-code', data);
+  }
+
+  // Método para gerar e enviar um código de redefinição de senha
+  Future<http.Response> requestPasswordResetCode(String email) async {
+    Map<String, dynamic> data = {
+      "email": email,
+    };
+
+    return await post('password-reset-code', data);
+  }
+
+  sendPasswordResetCode(String email) {}
+
+  changePassword(String newPassword) {}
 }
