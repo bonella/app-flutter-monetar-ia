@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:monetar_ia/components/headers/header_home.dart';
@@ -42,11 +43,16 @@ class _HomePageState extends State<HomePage> {
   double previousYearExpense = 0;
   Map<String, double> yearlyComparison = {};
   Map<String, double> monthlySummary = {};
+  List<Transaction> last10Transactions = [];
+  List<Transaction> revenueTransactions = [];
+  List<Transaction> expenseTransactions = [];
+  List<FlSpot> revenueSpots = [];
+  List<FlSpot> expenseSpots = [];
+  bool hasData = false;
+  final PageController pageController = PageController();
+  int _currentPage = 0;
 
   final RequestHttp _requestHttp = RequestHttp();
-
-  // Variáveis para os gráficos
-  List<Transaction> last10Transactions = [];
 
   @override
   void initState() {
@@ -61,18 +67,52 @@ class _HomePageState extends State<HomePage> {
     _loadLatestTransactions();
     _loadMonthlyTransactions();
     _loadYearlyComparison();
+    pageController.dispose();
   }
 
   // 1. Carregar as 10 últimas transações para o gráfico de linha
   Future<void> _loadLatestTransactions() async {
     try {
-      var response = await _requestHttp.get('transactions?limit=10');
+      var response = await _requestHttp.get('transactions');
       if (response.statusCode == 200) {
         List<dynamic> decodedResponse = json.decode(response.body);
         setState(() {
           last10Transactions = decodedResponse
               .map((data) => Transaction.fromJson(data))
               .toList();
+
+          // Limitar para as 10 últimas transações
+          last10Transactions = last10Transactions.take(10).toList();
+
+          // Separando as transações para gráficos
+          revenueTransactions = last10Transactions
+              .where((transaction) => transaction.type == 'INCOME')
+              .toList();
+
+          expenseTransactions = last10Transactions
+              .where((transaction) => transaction.type == 'EXPENSE')
+              .toList();
+
+          // Filtragem e mapeamento para os gráficos
+          revenueSpots = revenueTransactions
+              .asMap()
+              .map((index, transaction) => MapEntry(
+                    index.toDouble(),
+                    FlSpot(index.toDouble(), transaction.amount),
+                  ))
+              .values
+              .toList();
+
+          expenseSpots = expenseTransactions
+              .asMap()
+              .map((index, transaction) => MapEntry(
+                    index.toDouble(),
+                    FlSpot(index.toDouble(), transaction.amount),
+                  ))
+              .values
+              .toList();
+
+          hasData = last10Transactions.isNotEmpty;
         });
       } else {
         print('Erro ao carregar as últimas transações: ${response.statusCode}');
@@ -474,46 +514,71 @@ class _HomePageState extends State<HomePage> {
                                   child: SizedBox(
                                     height: 300,
                                     child: PageView(
+                                      controller: pageController,
+                                      onPageChanged: (int page) {
+                                        setState(() {
+                                          _currentPage = page;
+                                        });
+                                      },
                                       children: [
-                                        // Gráfico de Linha - Últimas Transações
-                                        // if (last10Transactions.isNotEmpty) ...[
-                                        //   Text(
-                                        //     'Últimas Transações',
-                                        //     style: TextStyle(
-                                        //         fontSize: 18,
-                                        //         fontWeight: FontWeight.bold),
-                                        //   ),
-                                        //   SizedBox(height: 10),
-                                        //   LineChart(
-                                        //       transactions: last10Transactions),
-                                        //   SizedBox(height: 30),
-                                        // ],
-                                        PizzaChart(
-                                          title: 'Resumo do Mês',
-                                          currentMonthRevenue:
-                                              monthlySummary['Receitas'] ?? 0.0,
-                                          currentMonthExpense:
-                                              monthlySummary['Despesas'] ?? 0.0,
-                                        ),
-                                        const SizedBox(height: 10),
-                                        ColumnChart(
-                                          title: 'Comparação Anual',
-                                          currentYearRevenue: yearlyComparison[
-                                                  'Receitas Atual'] ??
-                                              0.0,
-                                          currentYearExpense: yearlyComparison[
-                                                  'Despesas Atual'] ??
-                                              0.0,
-                                          previousYearRevenue: yearlyComparison[
-                                                  'Receitas Anterior'] ??
-                                              0.0,
-                                          previousYearExpense: yearlyComparison[
-                                                  'Despesas Anterior'] ??
-                                              0.0,
-                                          data: yearlyComparison,
-                                        )
+                                        if (hasData)
+                                          LineGraphic(
+                                            title: 'Últimas Transações',
+                                            transactions:
+                                                last10Transactions, // Aqui você passa as transações para o gráfico
+                                          ),
+                                        if (hasData)
+                                          PizzaChart(
+                                            title: 'Resumo do Mês',
+                                            currentMonthRevenue:
+                                                monthlySummary['Receitas'] ??
+                                                    0.0,
+                                            currentMonthExpense:
+                                                monthlySummary['Despesas'] ??
+                                                    0.0,
+                                          ),
+                                        if (hasData)
+                                          ColumnChart(
+                                            title: 'Comparação Anual',
+                                            currentYearRevenue:
+                                                yearlyComparison[
+                                                        'Receitas Atual'] ??
+                                                    0.0,
+                                            currentYearExpense:
+                                                yearlyComparison[
+                                                        'Despesas Atual'] ??
+                                                    0.0,
+                                            previousYearRevenue:
+                                                yearlyComparison[
+                                                        'Receitas Anterior'] ??
+                                                    0.0,
+                                            previousYearExpense:
+                                                yearlyComparison[
+                                                        'Despesas Anterior'] ??
+                                                    0.0,
+                                            data: yearlyComparison,
+                                          ),
                                       ],
-                                      // ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                // Indicadores de Página
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: List.generate(
+                                    3, // Número de gráficos
+                                    (index) => Container(
+                                      margin: const EdgeInsets.symmetric(
+                                          horizontal: 5),
+                                      height: 10,
+                                      width: 10,
+                                      decoration: BoxDecoration(
+                                        color: _currentPage == index
+                                            ? Colors.green
+                                            : Colors.grey,
+                                        shape: BoxShape.circle,
+                                      ),
                                     ),
                                   ),
                                 ),

@@ -127,7 +127,7 @@ class ColumnChart extends StatelessWidget {
                   show: true,
                   border: Border.all(
                     color: const Color(0xFF3D5936),
-                    width: 1,
+                    width: 2,
                   ),
                 ),
                 barGroups: _buildBarGroups(),

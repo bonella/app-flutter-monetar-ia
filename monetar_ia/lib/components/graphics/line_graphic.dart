@@ -1,16 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:monetar_ia/models/transaction.dart';
+import 'package:intl/intl.dart';
 
 class LineGraphic extends StatelessWidget {
   final String title;
+  final List<Transaction> transactions;
 
   const LineGraphic({
     super.key,
     required this.title,
+    required this.transactions,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Ordena as transações por data (do mais antigo para o mais recente)
+    List<Transaction> sortedTransactions = List.from(transactions)
+      ..sort((a, b) => a.transactionDate.compareTo(b.transactionDate));
+
+    // Limita para as últimas 10 transações
+    List<Transaction> lastTransactions = sortedTransactions.take(10).toList();
+
+    List<FlSpot> revenueSpots = [];
+    List<FlSpot> expenseSpots = [];
+
+    double maxAmount = 0;
+
+    // Preenche os pontos do gráfico com as últimas 10 transações
+    for (int i = 0; i < lastTransactions.length; i++) {
+      var transaction = lastTransactions[i];
+      double amount = transaction.amount;
+
+      if (transaction.type == 'INCOME') {
+        revenueSpots.add(FlSpot(i.toDouble(), amount));
+      } else if (transaction.type == 'EXPENSE') {
+        expenseSpots.add(FlSpot(i.toDouble(), amount));
+      }
+
+      // Atualiza o valor máximo de todas as transações
+      maxAmount = amount > maxAmount ? amount : maxAmount;
+    }
+
+    // Define o número de divisões (labels) no eixo Y
+    const int yLabelsCount = 8;
+    double yInterval =
+        maxAmount == 0 ? 1 : (maxAmount / (yLabelsCount - 1)).ceilToDouble();
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -52,7 +88,7 @@ class LineGraphic extends StatelessWidget {
                   show: true,
                   drawHorizontalLine: true,
                   drawVerticalLine: false,
-                  horizontalInterval: 100,
+                  horizontalInterval: yInterval,
                   getDrawingHorizontalLine: (value) {
                     return FlLine(
                       color: const Color(0xFF3D5936).withOpacity(0.1),
@@ -72,89 +108,73 @@ class LineGraphic extends StatelessWidget {
                           fontWeight: FontWeight.w400,
                           fontSize: 10,
                         );
-                        final titles = [
-                          '18/08',
-                          '19/08',
-                          '20/08',
-                          '21/08',
-                          '22/08',
-                          '23/08',
-                          '24/08',
-                          '25/08',
-                          '26/08',
-                          '27/08',
-                          '28/08'
-                        ];
-                        return Text(
-                          titles[value.toInt()],
-                          style: style,
-                        );
+                        if (value.toInt() < lastTransactions.length) {
+                          var date =
+                              lastTransactions[value.toInt()].transactionDate;
+                          String formattedDate = DateFormat('dd').format(date);
+                          return Text(formattedDate, style: style);
+                        }
+                        return const SizedBox.shrink();
                       },
                     ),
                   ),
-                  leftTitles: AxisTitles(
+                  rightTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 40,
-                      interval: 100,
+                      reservedSize: 50,
+                      interval: yInterval,
                       getTitlesWidget: (value, meta) {
-                        return Text(
-                          value.toInt().toString(),
-                          style: const TextStyle(
-                            color: Color(0xFF697077),
-                            fontWeight: FontWeight.w400,
-                            fontSize: 10,
+                        return Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: Text(
+                            value >= 1000
+                                ? '${(value / 1000).toStringAsFixed(1)}k'
+                                : value.toStringAsFixed(0),
+                            style: const TextStyle(
+                              color: Color(0xFF697077),
+                              fontWeight: FontWeight.w400,
+                              fontSize: 10,
+                            ),
                           ),
                         );
                       },
                     ),
                   ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                 ),
                 borderData: FlBorderData(
                   show: true,
-                  border: Border.all(
-                    color: const Color(0xFF3D5936),
-                    width: 1,
+                  border: const Border(
+                    top: BorderSide(color: Color(0xFF3D5936), width: 2),
+                    left: BorderSide(color: Color(0xFF3D5936), width: 2),
+                    right: BorderSide(color: Color(0xFF3D5936), width: 2),
+                    bottom: BorderSide(color: Color(0xFF3D5936), width: 2),
+                  ),
+                ),
+                lineTouchData: LineTouchData(
+                  enabled: true,
+                  touchTooltipData: LineTouchTooltipData(
+                    tooltipBgColor: const Color(0xFFEBEBEB),
+                    tooltipRoundedRadius: 8,
+                    tooltipPadding: const EdgeInsets.all(8),
                   ),
                 ),
                 lineBarsData: [
                   LineChartBarData(
-                    spots: [
-                      const FlSpot(0, 200),
-                      const FlSpot(1, 500),
-                      const FlSpot(2, 800),
-                      const FlSpot(3, 300),
-                      const FlSpot(4, 700),
-                      const FlSpot(5, 1000),
-                      const FlSpot(6, 600),
-                      const FlSpot(7, 900),
-                      const FlSpot(8, 400),
-                      const FlSpot(9, 800),
-                      const FlSpot(10, 200),
-                    ],
+                    spots: revenueSpots,
                     isCurved: true,
                     color: const Color(0xFF3D5936),
-                    barWidth: 2,
+                    barWidth: 5,
                     dotData: FlDotData(show: false),
                     belowBarData: BarAreaData(show: false),
                   ),
                   LineChartBarData(
-                    spots: [
-                      const FlSpot(0, 300),
-                      const FlSpot(1, 400),
-                      const FlSpot(2, 500),
-                      const FlSpot(3, 600),
-                      const FlSpot(4, 700),
-                      const FlSpot(5, 800),
-                      const FlSpot(6, 400),
-                      const FlSpot(7, 200),
-                      const FlSpot(8, 600),
-                      const FlSpot(9, 900),
-                      const FlSpot(10, 700),
-                    ],
+                    spots: expenseSpots,
                     isCurved: true,
                     color: const Color(0xFF8C1C03),
-                    barWidth: 2,
+                    barWidth: 5,
                     dotData: FlDotData(show: false),
                     belowBarData: BarAreaData(show: false),
                   ),

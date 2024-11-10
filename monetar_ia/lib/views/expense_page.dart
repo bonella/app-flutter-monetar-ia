@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:monetar_ia/components/cards/white_card.dart';
 import 'dart:convert';
 import 'package:monetar_ia/components/headers/header_add.dart';
 import 'package:monetar_ia/components/boxes/info_box.dart';
@@ -284,35 +285,46 @@ class _ExpensePageState extends State<ExpensePage> {
                                 ),
                               ],
                             )
-                          : Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16.0),
-                              child: ListView.builder(
-                                itemCount: filteredExpenses.length,
-                                itemBuilder: (context, index) {
-                                  final expense = filteredExpenses[index];
-                                  return Column(
-                                    children: [
-                                      GestureDetector(
-                                        onTap: () =>
-                                            _showTransactionDetailPopup(
-                                                context, expense),
-                                        child: InfoBox(
-                                          title:
-                                              expense.description ?? 'Despesa',
-                                          description:
-                                              'R\$ ${expense.amount.toStringAsFixed(2)}',
-                                          creationDate:
-                                              expense.formattedTransactionDate,
-                                          showBadge: false,
-                                          borderColor: const Color(0xFF8C1C03),
-                                          badgeColor: const Color(0xFF8C1C03),
-                                        ),
+                          : SingleChildScrollView(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  const SizedBox(height: 16),
+                                  WhiteCard(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16.0),
+                                      child: Column(
+                                        children:
+                                            filteredExpenses.map((expense) {
+                                          return Column(
+                                            children: [
+                                              GestureDetector(
+                                                onTap: () =>
+                                                    _showTransactionDetailPopup(
+                                                        context, expense),
+                                                child: InfoBox(
+                                                  title: expense.description ??
+                                                      'Despesa',
+                                                  description:
+                                                      'R\$ ${expense.amount.toStringAsFixed(2)}',
+                                                  creationDate: expense
+                                                      .formattedTransactionDate,
+                                                  showBadge: false,
+                                                  borderColor:
+                                                      const Color(0xFF8C1C03),
+                                                  badgeColor:
+                                                      const Color(0xFF8C1C03),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 16),
+                                            ],
+                                          );
+                                        }).toList(),
                                       ),
-                                      const SizedBox(height: 16),
-                                    ],
-                                  );
-                                },
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                 ),

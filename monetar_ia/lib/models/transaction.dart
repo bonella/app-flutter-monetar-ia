@@ -36,14 +36,13 @@ class Transaction {
       case 'EXPENSE':
         return 'Despesas';
       default:
-        return type; // Retorna como está se não houver mapeamento
+        return type;
     }
   }
 
   // Método para formatar o amount como String
   String get formattedAmount {
-    return NumberFormat.simpleCurrency()
-        .format(amount); // Formatação como moeda
+    return NumberFormat.simpleCurrency().format(amount);
   }
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
