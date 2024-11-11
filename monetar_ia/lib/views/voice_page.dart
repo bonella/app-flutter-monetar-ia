@@ -38,26 +38,22 @@ class _VoicePageState extends State<VoicePage> {
 
   Future<void> sendMessage(String text) async {
     try {
-      print('Enviando mensagem: $text'); // Verificar msg enviada
+      print('Enviando mensagem: $text');
       var response = await requestHttp.chatWithAI(text);
 
-      print('Resposta da API: ${response.body}'); // Verifica a resposta da API
+      print('Resposta da API: ${response.body}');
 
       if (response.statusCode == 200) {
-        var responseData = json.decode(response.body);
+        // Como a resposta é uma string simples, não é necessário fazer decode de JSON
+        String aiResponse = response.body; // A resposta é diretamente o texto
 
-        // Verifica se "texto_gerado_ia" está presente e se não é nulo
-        if (responseData['texto_gerado_ia'] != null) {
-          // Decodifica o JSON contido na string
-          var innerResponse = json.decode(responseData['texto_gerado_ia']);
-          String aiResponse = innerResponse['response'];
-
-          // Verifica se aiResponse não é nulo
-          historic.add(aiResponse);
+        // Verifica se aiResponse não é nulo ou vazio
+        if (aiResponse.isNotEmpty) {
+          historic.add(aiResponse); // Adiciona diretamente ao histórico
           _scrollToBottom();
           await _typeResponse(aiResponse);
         } else {
-          historic.add('Erro: texto_gerado_ia é nulo');
+          historic.add('Erro: resposta da IA vazia');
           _scrollToBottom();
         }
       } else {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:monetar_ia/services/request_http.dart';
+import 'package:monetar_ia/components/popups/change_password_popup.dart';
 
 class EnterCodePopup extends StatefulWidget {
   final String email;
@@ -23,6 +24,51 @@ class _EnterCodePopupState extends State<EnterCodePopup> {
       controller.dispose();
     }
     super.dispose();
+  }
+
+  Future<void> _validateCodeAndProceed() async {
+    setState(() {
+      errorMessage = null;
+    });
+
+    bool isAnyFieldEmpty =
+        _controllers.any((controller) => controller.text.isEmpty);
+
+    if (isAnyFieldEmpty) {
+      _setErrorMessage("Favor preencher todos os campos");
+      return;
+    }
+
+    if (_formKey.currentState!.validate()) {
+      final code = _controllers.map((c) => c.text).join();
+
+      try {
+        final response =
+            await _requestHttp.validateResetCode(widget.email, int.parse(code));
+
+        if (response.statusCode == 200) {
+          Navigator.of(context).pop();
+
+          showDialog(
+            context: context,
+            builder: (context) => ChangePasswordPopup(email: widget.email),
+          );
+        }
+      } catch (e) {
+        String errorMsg = e.toString();
+        if (errorMsg.contains("Código inválido ou expirado")) {
+          _setErrorMessage("O código inserido é inválido ou expirou.");
+        } else {
+          _setErrorMessage("Erro ao validar o código. Tente novamente.");
+        }
+      }
+    }
+  }
+
+  void _setErrorMessage(String message) {
+    setState(() {
+      errorMessage = message;
+    });
   }
 
   @override
@@ -62,7 +108,7 @@ class _EnterCodePopupState extends State<EnterCodePopup> {
               const SizedBox(height: 20),
               _buildCodeInputFields(),
               const SizedBox(height: 20),
-              if (errorMessage != null) ...[
+              if (errorMessage != null)
                 Container(
                   padding: const EdgeInsets.only(top: 10),
                   child: Text(
@@ -73,7 +119,6 @@ class _EnterCodePopupState extends State<EnterCodePopup> {
                     ),
                   ),
                 ),
-              ],
             ],
           ),
         ),
@@ -92,45 +137,11 @@ class _EnterCodePopupState extends State<EnterCodePopup> {
               },
             ),
             TextButton(
+              onPressed: _validateCodeAndProceed,
               child: const Text(
                 'Validar Código',
                 style: TextStyle(color: Color(0xFF003566)),
               ),
-              onPressed: () async {
-                setState(() {
-                  errorMessage = null;
-                });
-
-                bool isAnyFieldEmpty =
-                    _controllers.any((controller) => controller.text.isEmpty);
-
-                if (isAnyFieldEmpty) {
-                  _setErrorMessage("Favor preencher todos os campos");
-                  return;
-                }
-
-                if (_formKey.currentState!.validate()) {
-                  final code = _controllers.map((c) => c.text).join();
-                  try {
-                    final response = await _requestHttp.validateResetCode(
-                        widget.email, int.parse(code));
-                    if (response.statusCode == 200) {
-                      // Código válido, prossiga para redefinir a senha
-                      Navigator.of(context).pop();
-                    } else {
-                      _setErrorMessage("Código inválido.");
-                    }
-                  } catch (e) {
-                    String errorMessage = e.toString();
-                    if (errorMessage.contains("Código inválido ou expirado")) {
-                      _setErrorMessage(
-                          "O código inserido é inválido ou expirou. Tente novamente.");
-                    } else {
-                      _setErrorMessage("Código inválido ou expirado.");
-                    }
-                  }
-                }
-              },
             ),
           ],
         ),
@@ -139,12 +150,6 @@ class _EnterCodePopupState extends State<EnterCodePopup> {
       contentPadding: const EdgeInsets.all(16),
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
     );
-  }
-
-  void _setErrorMessage(String message) {
-    setState(() {
-      errorMessage = message;
-    });
   }
 
   Widget _buildCodeInputFields() {

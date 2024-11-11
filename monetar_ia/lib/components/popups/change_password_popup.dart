@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:monetar_ia/services/request_http.dart';
 
 class ChangePasswordPopup extends StatefulWidget {
-  const ChangePasswordPopup({super.key});
+  final String email;
+
+  const ChangePasswordPopup({super.key, required this.email});
 
   @override
   _ChangePasswordPopupState createState() => _ChangePasswordPopupState();
@@ -12,6 +14,8 @@ class _ChangePasswordPopupState extends State<ChangePasswordPopup> {
   final _formKey = GlobalKey<FormState>();
   String newPassword = '';
   String confirmPassword = '';
+  bool _obscureNewPassword = true;
+  bool _obscureConfirmPassword = true;
   final TextEditingController newPasswordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
@@ -22,6 +26,22 @@ class _ChangePasswordPopupState extends State<ChangePasswordPopup> {
     newPasswordController.dispose();
     confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _changePassword() async {
+    if (_formKey.currentState!.validate()) {
+      try {
+        await _requestHttp.changePassword(widget.email, newPassword);
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Senha alterada com sucesso!')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Erro ao alterar a senha.')),
+        );
+      }
+    }
   }
 
   @override
@@ -67,12 +87,20 @@ class _ChangePasswordPopupState extends State<ChangePasswordPopup> {
                   if (value == null || value.isEmpty) {
                     return 'Nova senha é obrigatória';
                   }
-                  if (value.length < 6) {
-                    return 'A senha deve ter pelo menos 6 caracteres';
+                  if (value.length < 8) {
+                    return 'A senha deve ter pelo menos 8 caracteres';
+                  }
+                  if (value.length > 12) {
+                    return 'A senha deve ter no máximo 12 caracteres';
                   }
                   return null;
                 },
-                obscureText: true,
+                obscureText: _obscureNewPassword,
+                toggleVisibility: () {
+                  setState(() {
+                    _obscureNewPassword = !_obscureNewPassword;
+                  });
+                },
               ),
               const SizedBox(height: 16),
               _buildTextField(
@@ -88,35 +116,38 @@ class _ChangePasswordPopupState extends State<ChangePasswordPopup> {
                   }
                   return null;
                 },
-                obscureText: true,
+                obscureText: _obscureConfirmPassword,
+                toggleVisibility: () {
+                  setState(() {
+                    _obscureConfirmPassword = !_obscureConfirmPassword;
+                  });
+                },
               ),
             ],
           ),
         ),
       ),
       actions: [
-        TextButton(
-          child: const Text(
-            'Cancelar',
-            style: TextStyle(color: Color(0xFF003566)),
-          ),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        TextButton(
-          child: const Text(
-            'Alterar Senha',
-            style: TextStyle(color: Color(0xFF003566)),
-          ),
-          onPressed: () async {
-            if (_formKey.currentState!.validate()) {
-              // Lógica para alterar a senha
-              await _requestHttp.changePassword(newPassword);
-              Navigator.of(context).pop();
-              // Aqui você pode mostrar um alerta de sucesso ou redirecionar
-            }
-          },
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            TextButton(
+              child: const Text(
+                'Cancelar',
+                style: TextStyle(color: Color(0xFF003566)),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              onPressed: _changePassword,
+              child: const Text(
+                'Alterar Senha',
+                style: TextStyle(color: Color(0xFF003566)),
+              ),
+            ),
+          ],
         ),
       ],
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -131,6 +162,7 @@ class _ChangePasswordPopupState extends State<ChangePasswordPopup> {
     required ValueChanged<String> onChanged,
     String? Function(String?)? validator,
     bool obscureText = false,
+    required VoidCallback toggleVisibility,
   }) {
     return TextFormField(
       controller: controller,
@@ -144,6 +176,13 @@ class _ChangePasswordPopupState extends State<ChangePasswordPopup> {
         ),
         focusedBorder: const UnderlineInputBorder(
           borderSide: BorderSide(color: Colors.black, width: 2),
+        ),
+        suffixIcon: IconButton(
+          icon: Icon(
+            obscureText ? Icons.visibility : Icons.visibility_off,
+            color: Colors.black,
+          ),
+          onPressed: toggleVisibility,
         ),
       ),
       validator: validator,

@@ -239,12 +239,34 @@ class RequestHttp {
 
   // Método para validar o código de redefinição de senha
   Future<http.Response> validateResetCode(String email, int resetCode) async {
-    Map<String, dynamic> data = {
+    final url = Uri.parse('$_baseUrl/validate-reset-code');
+
+    final token = await _tokenStorage.getToken();
+
+    if (token == null) {
+      throw Exception('Token não encontrado. Faça login novamente.');
+    }
+
+    final body = jsonEncode({
       "email": email,
       "reset_code": resetCode,
-    };
+    });
 
-    return await post('validate-reset-code', data);
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'bearer $token',
+      },
+      body: body,
+    );
+
+    if (response.statusCode == 200) {
+      return response;
+    } else {
+      throw Exception(
+          jsonDecode(response.body)['detail'] ?? 'Erro desconhecido');
+    }
   }
 
   // Método para gerar e enviar um código de redefinição de senha
@@ -258,5 +280,26 @@ class RequestHttp {
 
   sendPasswordResetCode(String email) {}
 
-  changePassword(String newPassword) {}
+  // Método para redefinir a senha usando o endpoint '/new-password'
+  Future<void> changePassword(String email, String newPassword) async {
+    try {
+      Map<String, dynamic> data = {
+        "email": email,
+        "new_password": newPassword,
+      };
+
+      final response = await post('new-password', data);
+
+      if (response.statusCode == 200) {
+        print('Senha redefinida com sucesso!');
+      } else if (response.statusCode == 400) {
+        throw Exception('Erro: Usuário não encontrado ou código não validado.');
+      } else if (response.statusCode == 422) {
+        throw Exception('Erro de validação: Verifique os dados enviados.');
+      }
+    } catch (e) {
+      print('Erro ao redefinir senha: $e');
+      throw Exception(e);
+    }
+  }
 }

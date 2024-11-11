@@ -13,7 +13,7 @@ class ResetPasswordPopup extends StatefulWidget {
 class _ResetPasswordPopupState extends State<ResetPasswordPopup> {
   final _formKey = GlobalKey<FormState>();
   String email = '';
-  String? _emailError; // Variável para armazenar a mensagem de erro
+  String? _emailError;
   final TextEditingController emailController = TextEditingController();
   final RequestHttp _requestHttp = RequestHttp();
 
@@ -41,7 +41,6 @@ class _ResetPasswordPopupState extends State<ResetPasswordPopup> {
       } catch (error) {
         setState(() {
           _emailError = 'E-mail não cadastrado';
-          // Força a validação para exibir a mensagem de erro imediatamente
           _formKey.currentState!.validate();
         });
       }

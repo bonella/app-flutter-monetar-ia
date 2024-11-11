@@ -33,19 +33,33 @@ class LineGraphic extends StatelessWidget {
       double amount = transaction.amount;
 
       if (transaction.type == 'INCOME') {
-        revenueSpots.add(FlSpot(i.toDouble(), amount));
+        revenueSpots.add(FlSpot(i.toDouble(), amount)); // Receitas
       } else if (transaction.type == 'EXPENSE') {
-        expenseSpots.add(FlSpot(i.toDouble(), amount));
+        expenseSpots.add(FlSpot(i.toDouble(), amount)); // Despesas
       }
 
       // Atualiza o valor máximo de todas as transações
       maxAmount = amount > maxAmount ? amount : maxAmount;
     }
 
+    // Garante que o valor máximo não seja 0, definindo um valor mínimo
+    maxAmount = maxAmount == 0 ? 100 : maxAmount;
+
+    // Verifica se há valores para as receitas e despesas
+    bool hasRevenue = revenueSpots.isNotEmpty;
+    bool hasExpense = expenseSpots.isNotEmpty;
+
     // Define o número de divisões (labels) no eixo Y
     const int yLabelsCount = 8;
-    double yInterval =
-        maxAmount == 0 ? 1 : (maxAmount / (yLabelsCount - 1)).ceilToDouble();
+
+    // Se o maxAmount for pequeno (como 10 ou 100), ajusta o intervalo para ser maior
+    double yInterval = maxAmount / (yLabelsCount - 1);
+    yInterval = yInterval < 10
+        ? 10
+        : yInterval; // Garante que o intervalo não seja menor que 10
+
+    // Garantir que o intervalo y nunca seja menor que 1
+    yInterval = yInterval < 1 ? 1 : yInterval;
 
     return Container(
       width: double.infinity,
@@ -162,22 +176,24 @@ class LineGraphic extends StatelessWidget {
                   ),
                 ),
                 lineBarsData: [
-                  LineChartBarData(
-                    spots: revenueSpots,
-                    isCurved: true,
-                    color: const Color(0xFF3D5936),
-                    barWidth: 5,
-                    dotData: FlDotData(show: false),
-                    belowBarData: BarAreaData(show: false),
-                  ),
-                  LineChartBarData(
-                    spots: expenseSpots,
-                    isCurved: true,
-                    color: const Color(0xFF8C1C03),
-                    barWidth: 5,
-                    dotData: FlDotData(show: false),
-                    belowBarData: BarAreaData(show: false),
-                  ),
+                  if (hasRevenue)
+                    LineChartBarData(
+                      spots: revenueSpots,
+                      isCurved: true,
+                      color: const Color(0xFF3D5936),
+                      barWidth: 5,
+                      dotData: FlDotData(show: false),
+                      belowBarData: BarAreaData(show: false),
+                    ),
+                  if (hasExpense)
+                    LineChartBarData(
+                      spots: expenseSpots,
+                      isCurved: true,
+                      color: const Color(0xFF8C1C03),
+                      barWidth: 5,
+                      dotData: FlDotData(show: false),
+                      belowBarData: BarAreaData(show: false),
+                    ),
                 ],
               ),
             ),

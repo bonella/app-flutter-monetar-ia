@@ -13,72 +13,74 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
+    SystemChrome.setPreferredOrientations(
+        [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
 
-    return Scaffold(
-      body: Container(
-        color: const Color(0xFFE4F2E6),
-        child: Column(
-          children: <Widget>[
-            const HeaderLogin(),
-            Expanded(
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Color(0xFFA9BF99),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
+    return WillPopScope(
+      onWillPop: () async {
+        SystemNavigator.pop();
+        return false;
+      },
+      child: Scaffold(
+        body: Container(
+          color: const Color(0xFFE4F2E6),
+          child: Column(
+            children: <Widget>[
+              const HeaderLogin(),
+              Expanded(
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFA9BF99),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 40, horizontal: 20),
+                        child: const Center(
+                          child: Text(
+                            'Monetar.ia',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontFamily: 'Kumbh Sans',
+                              fontWeight: FontWeight.w400,
+                              fontSize: 50,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF738C61),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(20),
+                              topRight: Radius.circular(20),
+                            ),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: const SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                CardBtnLogin(),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Column(
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 40,
-                        horizontal: 20,
-                      ),
-                      child: const Center(
-                        child: Text(
-                          'Monetar.ia',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontFamily: 'Kumbh Sans',
-                            fontWeight: FontWeight.w400,
-                            fontSize: 50,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF738C61),
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(20),
-                            topRight: Radius.circular(20),
-                          ),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: const SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              CardBtnLogin(),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

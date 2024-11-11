@@ -33,6 +33,7 @@ class _HomePageState extends State<HomePage> {
   DateTime selectedDate = DateTime.now();
   String userName = '';
   Transaction? lastTransaction;
+  Transaction? lastExpense;
   Goal? lastGoal;
   double totalRevenue = 0.0;
   double totalExpense = 0.0;
@@ -49,9 +50,10 @@ class _HomePageState extends State<HomePage> {
   List<FlSpot> revenueSpots = [];
   List<FlSpot> expenseSpots = [];
   bool hasData = false;
-  final PageController pageController = PageController();
+  late PageController pageController;
   int _currentPage = 0;
-
+  bool _isLoading =
+      true; // Altere para uma variável de instância e inicialize como 'true'
   final RequestHttp _requestHttp = RequestHttp();
 
   @override
@@ -62,12 +64,37 @@ class _HomePageState extends State<HomePage> {
     _loadTotalRevenue();
     _loadTotalExpense();
     _loadLatestRevenue();
-    ();
+    _loadLatestExpense();
     _loadLatestGoal();
     _loadLatestTransactions();
     _loadMonthlyTransactions();
     _loadYearlyComparison();
+    pageController = PageController();
+    setState(() {
+      _isLoading =
+          true; // Defina o valor de _isLoading como true ao iniciar o carregamento
+    });
+  }
+
+  @override
+  void dispose() {
+    // Certifique-se de descartar o controller quando o widget for removido
     pageController.dispose();
+    super.dispose();
+  }
+
+  Future<void> navigateToNextPage() async {
+    // Realiza uma operação assíncrona
+    await Future.delayed(const Duration(seconds: 2));
+
+    // Verifique se o widget ainda está montado antes de fazer qualquer operação
+    if (mounted) {
+      // Agora, é seguro usar o PageController
+      pageController.jumpToPage(1);
+    } else {
+      // O widget foi descartado, então não tentamos interagir com o controller
+      print('O widget foi descartado.');
+    }
   }
 
   // 1. Carregar as 10 últimas transações para o gráfico de linha
@@ -302,8 +329,12 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadLatestRevenue() async {
     try {
       var response = await _requestHttp.get('transactions/revenues');
+
       if (response.statusCode == 200) {
-        List<dynamic> decodedResponse = json.decode(response.body);
+        String responseBody = utf8.decode(response.bodyBytes);
+
+        List<dynamic> decodedResponse = json.decode(responseBody);
+
         List<Transaction> transactions =
             decodedResponse.map((data) => Transaction.fromJson(data)).toList();
 
@@ -319,12 +350,49 @@ class _HomePageState extends State<HomePage> {
           lastTransaction = filteredTransactions.reduce(
               (a, b) => a.transactionDate.isAfter(b.transactionDate) ? a : b);
         }
+
         setState(() {});
       } else {
         print('Erro ao carregar as transações: ${response.statusCode}');
       }
     } catch (e) {
       print('Erro ao carregar as transações: $e');
+    }
+  }
+
+  Future<void> _loadLatestExpense() async {
+    try {
+      var response = await _requestHttp.get('transactions/expenses');
+
+      if (response.statusCode == 200) {
+        String responseBody = utf8.decode(response.bodyBytes);
+
+        List<dynamic> decodedResponse = json.decode(responseBody);
+
+        List<Transaction> transactions =
+            decodedResponse.map((data) => Transaction.fromJson(data)).toList();
+
+        List<Transaction> filteredTransactions =
+            transactions.where((transaction) {
+          return transaction.transactionDate.year == selectedDate.year;
+        }).toList();
+
+        if (filteredTransactions.isEmpty) {
+          lastExpense = transactions.reduce(
+              (a, b) => a.transactionDate.isAfter(b.transactionDate) ? a : b);
+        } else {
+          lastExpense = filteredTransactions.reduce(
+              (a, b) => a.transactionDate.isAfter(b.transactionDate) ? a : b);
+        }
+
+        // print('Última Despesa: ${lastExpense?.description}');
+
+        setState(() {});
+      } else {
+        print('Erro ao carregar as despesas: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Erro ao carregar as despesas: $e');
     }
   }
 
@@ -412,8 +480,12 @@ class _HomePageState extends State<HomePage> {
             child: const Text('Cancelar'),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(true);
+            onPressed: () async {
+              await _logout(context);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+              );
             },
             child: const Text('Sair'),
           ),
@@ -469,65 +541,86 @@ class _HomePageState extends State<HomePage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16.0, vertical: 8.0),
-                                  child: InfoBox2(
-                                    title: lastTransaction?.description != null
-                                        ? 'Última Receita: ${lastTransaction!.description}'
-                                        : 'Sem Receitas',
-                                    description: lastTransaction != null
-                                        ? 'R\$ ${lastTransaction!.amount.toStringAsFixed(2)}'
-                                        : '',
-                                    creationDate: lastTransaction != null
-                                        ? DateFormat('dd/MM/yyyy').format(
-                                            lastTransaction!.transactionDate)
-                                        : 'Data não disponível',
+                                // Verificando a variável hasData
+                                if (hasData) ...[
+                                  // Exibe os InfoBox2 quando os dados estiverem disponíveis
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16.0, vertical: 8.0),
+                                    child: InfoBox2(
+                                      title: lastTransaction?.description !=
+                                              null
+                                          ? 'Última Receita: ${lastTransaction!.description}'
+                                          : 'Sem Receitas',
+                                      description: lastTransaction != null
+                                          ? 'R\$ ${lastTransaction!.amount.toStringAsFixed(2)}'
+                                          : '',
+                                      creationDate: lastTransaction != null
+                                          ? DateFormat('dd/MM/yyyy').format(
+                                              lastTransaction!.transactionDate)
+                                          : 'Data não disponível',
+                                    ),
                                   ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16.0, vertical: 8.0),
-                                  child: InfoBox2(
-                                    title: lastGoal?.name != null
-                                        ? 'Última Meta: ${lastGoal!.name}'
-                                        : 'Sem Metas',
-                                    description: lastGoal != null
-                                        ? 'R\$ ${lastGoal!.targetAmount.toStringAsFixed(2)}'
-                                        : 'R\$ 0.00',
-                                    showBadge: lastGoal != null,
-                                    percentage: lastGoal != null
-                                        ? '${lastGoal!.percentage}%'
-                                        : '0%',
-                                    borderColor: const Color(0xFF003566),
-                                    badgeColor: const Color(0xFF003566),
-                                    creationDate: lastGoal != null
-                                        ? DateFormat('dd/MM/yyyy')
-                                            .format(lastGoal!.createdAt)
-                                        : 'Data não disponível',
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16.0, vertical: 8.0),
+                                    child: InfoBox2(
+                                      title: lastExpense?.description != null
+                                          ? 'Última Despesa: ${lastExpense!.description}'
+                                          : 'Sem Despesas',
+                                      description: lastExpense != null
+                                          ? 'R\$ ${lastExpense!.amount.toStringAsFixed(2)}'
+                                          : 'R\$ 0.00',
+                                      borderColor: const Color(0xFF8C1C03),
+                                      badgeColor: const Color(0xFF003566),
+                                      creationDate: lastExpense != null
+                                          ? DateFormat('dd/MM/yyyy')
+                                              .format(lastExpense!.createdAt)
+                                          : 'Data não disponível',
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 8),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16.0),
-                                  child: SizedBox(
-                                    height: 300,
-                                    child: PageView(
-                                      controller: pageController,
-                                      onPageChanged: (int page) {
-                                        setState(() {
-                                          _currentPage = page;
-                                        });
-                                      },
-                                      children: [
-                                        if (hasData)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16.0, vertical: 8.0),
+                                    child: InfoBox2(
+                                      title: lastGoal?.name != null
+                                          ? 'Última Meta: ${lastGoal!.name}'
+                                          : 'Sem Metas',
+                                      description: lastGoal != null
+                                          ? 'R\$ ${lastGoal!.targetAmount.toStringAsFixed(2)}'
+                                          : 'R\$ 0.00',
+                                      showBadge: lastGoal != null,
+                                      percentage: lastGoal != null
+                                          ? '${lastGoal!.percentage}%'
+                                          : '0%',
+                                      borderColor: const Color(0xFF003566),
+                                      badgeColor: const Color(0xFF003566),
+                                      creationDate: lastGoal != null
+                                          ? DateFormat('dd/MM/yyyy')
+                                              .format(lastGoal!.createdAt)
+                                          : 'Data não disponível',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16.0),
+                                    child: SizedBox(
+                                      height: 300,
+                                      child: PageView(
+                                        controller: pageController,
+                                        onPageChanged: (int page) {
+                                          if (mounted) {
+                                            setState(() {
+                                              _currentPage = page;
+                                            });
+                                          }
+                                        },
+                                        children: [
                                           LineGraphic(
                                             title: 'Últimas Transações',
-                                            transactions:
-                                                last10Transactions, // Aqui você passa as transações para o gráfico
+                                            transactions: last10Transactions,
                                           ),
-                                        if (hasData)
                                           PizzaChart(
                                             title: 'Resumo do Mês',
                                             currentMonthRevenue:
@@ -537,7 +630,6 @@ class _HomePageState extends State<HomePage> {
                                                 monthlySummary['Despesas'] ??
                                                     0.0,
                                           ),
-                                        if (hasData)
                                           ColumnChart(
                                             title: 'Comparação Anual',
                                             currentYearRevenue:
@@ -558,34 +650,42 @@ class _HomePageState extends State<HomePage> {
                                                     0.0,
                                             data: yearlyComparison,
                                           ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                // Indicadores de Página
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: List.generate(
-                                    3, // Número de gráficos
-                                    (index) => Container(
-                                      margin: const EdgeInsets.symmetric(
-                                          horizontal: 5),
-                                      height: 10,
-                                      width: 10,
-                                      decoration: BoxDecoration(
-                                        color: _currentPage == index
-                                            ? Colors.green
-                                            : Colors.grey,
-                                        shape: BoxShape.circle,
+                                        ],
                                       ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(height: 32),
+                                  const SizedBox(height: 16),
+                                  // Indicadores de Página
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: List.generate(
+                                      3, // Número de gráficos
+                                      (index) => Container(
+                                        margin: const EdgeInsets.symmetric(
+                                            horizontal: 5),
+                                        height: 10,
+                                        width: 10,
+                                        decoration: BoxDecoration(
+                                          color: _currentPage == index
+                                              ? Colors.green
+                                              : Colors.grey,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 32),
+                                ] else ...[
+                                  // Exibe a imagem caso não haja dados
+                                  Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Image.asset(
+                                        'lib/assets/fundo_despesas2.png'),
+                                  ),
+                                ],
                               ],
                             ),
-                          ),
+                          )
                         ],
                       ),
                     ),
