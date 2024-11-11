@@ -36,15 +36,20 @@ class Transaction {
       case 'EXPENSE':
         return 'Despesas';
       default:
-        return type; // Retorna como está se não houver mapeamento
+        return type;
     }
+  }
+
+  // Método para formatar o amount como String
+  String get formattedAmount {
+    return NumberFormat.simpleCurrency().format(amount);
   }
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
     return Transaction(
       id: json['id'],
       userId: json['user_id'],
-      amount: double.parse(json['amount']),
+      amount: double.tryParse(json['amount'].toString()) ?? 0.0,
       type: json['type'],
       categoryId: json['category_id'],
       description: json['description'],

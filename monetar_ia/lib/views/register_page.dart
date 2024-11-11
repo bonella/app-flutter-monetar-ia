@@ -100,7 +100,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 children: <Widget>[
                   const HeaderFirstSteps(
                     title: 'Monetar.ia',
-                    subtitle: 'Cadastro',
+                    subtitle: 'Cadastre-se',
                   ),
                   Expanded(
                     child: SingleChildScrollView(

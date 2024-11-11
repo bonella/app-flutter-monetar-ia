@@ -2,12 +2,37 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 class ColumnChart extends StatelessWidget {
+  final Map<String, double> data;
+
   final String title;
+  final double currentYearRevenue;
+  final double currentYearExpense;
+  final double previousYearRevenue;
+  final double previousYearExpense;
 
   const ColumnChart({
     super.key,
     required this.title,
+    required this.currentYearRevenue,
+    required this.currentYearExpense,
+    required this.previousYearRevenue,
+    required this.previousYearExpense,
+    required this.data,
   });
+
+  double _calculateInterval() {
+    double maxValue = [
+      currentYearRevenue,
+      currentYearExpense,
+      previousYearRevenue,
+      previousYearExpense
+    ].reduce((a, b) => a > b ? a : b);
+
+    double interval = maxValue / 10;
+
+    if (interval < 1) return 1;
+    return interval.ceilToDouble();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +59,7 @@ class ColumnChart extends StatelessWidget {
               color: Color(0xFF21272A),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           Row(
             children: [
               _buildLegendCircle(
@@ -55,26 +80,21 @@ class ColumnChart extends StatelessWidget {
                       showTitles: true,
                       reservedSize: 40,
                       getTitlesWidget: (value, meta) {
+                        int currentYear = DateTime.now().year;
                         final titles = [
-                          'Jan',
-                          'Feb',
-                          'Mar',
-                          'Apr',
-                          'May',
-                          'Jun',
-                          'Jul',
-                          'Aug',
-                          'Sep',
-                          'Oct',
-                          'Nov',
-                          'Dec'
+                          (currentYear - 1).toString(),
+                          currentYear.toString(),
                         ];
-                        return Text(
-                          titles[value.toInt()],
-                          style: const TextStyle(
-                            color: Color(0xFF697077),
-                            fontWeight: FontWeight.w400,
-                            fontSize: 10,
+
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            titles[value.toInt()],
+                            style: const TextStyle(
+                              color: Color(0xFF697077),
+                              fontWeight: FontWeight.w400,
+                              fontSize: 12,
+                            ),
                           ),
                         );
                       },
@@ -84,7 +104,7 @@ class ColumnChart extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 40,
-                      interval: 200,
+                      interval: _calculateInterval(),
                       getTitlesWidget: (value, meta) {
                         return Text(
                           value.toInt().toString(),
@@ -97,34 +117,74 @@ class ColumnChart extends StatelessWidget {
                       },
                     ),
                   ),
+                  rightTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: false,
+                    ),
+                  ),
                 ),
                 borderData: FlBorderData(
                   show: true,
                   border: Border.all(
                     color: const Color(0xFF3D5936),
-                    width: 1,
+                    width: 2,
                   ),
                 ),
-                barGroups: [
-                  BarChartGroupData(x: 0, barRods: [
-                    BarChartRodData(
-                      toY: 200,
-                      color: const Color(0xFF3D5936),
-                    ),
-                  ]),
-                  BarChartGroupData(x: 1, barRods: [
-                    BarChartRodData(
-                      toY: 300,
-                      color: const Color(0xFF8C1C03),
-                    ),
-                  ]),
-                ],
+                barGroups: _buildBarGroups(),
+                barTouchData: BarTouchData(
+                  touchTooltipData: BarTouchTooltipData(
+                    tooltipBgColor: const Color(0xFFEBEBEB),
+                  ),
+                ),
               ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  List<BarChartGroupData> _buildBarGroups() {
+    return [
+      // Ano Anterior
+      BarChartGroupData(
+        x: 0,
+        barRods: [
+          BarChartRodData(
+            toY: previousYearRevenue,
+            color: const Color(0xFF3D5936),
+            width: 20,
+            borderRadius: BorderRadius.zero,
+          ),
+          BarChartRodData(
+            toY: previousYearExpense,
+            color: const Color(0xFF8C1C03),
+            width: 20,
+            borderRadius: BorderRadius.zero,
+          ),
+        ],
+        barsSpace: 12,
+      ),
+      // Ano Atual
+      BarChartGroupData(
+        x: 1,
+        barRods: [
+          BarChartRodData(
+            toY: currentYearRevenue,
+            color: const Color(0xFF3D5936),
+            width: 20,
+            borderRadius: BorderRadius.zero,
+          ),
+          BarChartRodData(
+            toY: currentYearExpense,
+            color: const Color(0xFF8C1C03),
+            width: 20,
+            borderRadius: BorderRadius.zero,
+          ),
+        ],
+        barsSpace: 12,
+      ),
+    ];
   }
 
   Widget _buildLegendCircle({required Color color, required String text}) {

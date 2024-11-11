@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:monetar_ia/components/headers/header_add.dart';
+import 'package:monetar_ia/components/cards/white_card.dart';
+
 import 'package:monetar_ia/components/boxes/info_box.dart';
 import 'package:monetar_ia/components/footers/footer.dart';
 import 'package:monetar_ia/components/buttons/round_btn.dart';
@@ -101,17 +103,11 @@ class _RevenuePageState extends State<RevenuePage> {
             filteredRevenues = List.from(revenues);
             _filterRevenues("");
           });
-        } else {
-          _showErrorSnackbar(
-              'Erro ao carregar receitas: ${response.statusCode}');
-        }
+        } else {}
       } else {
         _showErrorSnackbar('Token não está disponível. Faça login novamente.');
         print("Token não está disponível. Faça login novamente.");
       }
-    } catch (e) {
-      _showErrorSnackbar('Erro ao carregar receitas: $e');
-      print("Erro ao carregar receitas: $e");
     } finally {
       setState(() {
         _isLoading = false;
@@ -261,6 +257,7 @@ class _RevenuePageState extends State<RevenuePage> {
                   value: 'R\$ ${_calculateTotalRevenues().toStringAsFixed(2)}',
                   onSearch: _filterRevenues,
                 ),
+                const SizedBox(height: 16),
                 Expanded(
                   child: _isLoading
                       ? const Center(
@@ -284,35 +281,46 @@ class _RevenuePageState extends State<RevenuePage> {
                                 ),
                               ],
                             )
-                          : Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16.0),
-                              child: ListView.builder(
-                                itemCount: filteredRevenues.length,
-                                itemBuilder: (context, index) {
-                                  final revenue = filteredRevenues[index];
-                                  return Column(
-                                    children: [
-                                      GestureDetector(
-                                        onTap: () =>
-                                            _showTransactionDetailPopup(
-                                                context, revenue),
-                                        child: InfoBox(
-                                          title:
-                                              revenue.description ?? 'Receita',
-                                          description:
-                                              'R\$ ${revenue.amount.toStringAsFixed(2)}',
-                                          creationDate:
-                                              revenue.formattedTransactionDate,
-                                          showBadge: false,
-                                          borderColor: const Color(0xFF3D5936),
-                                          badgeColor: const Color(0xFF3D5936),
-                                        ),
+                          : SingleChildScrollView(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  const SizedBox(height: 16),
+                                  WhiteCard(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16.0),
+                                      child: Column(
+                                        children:
+                                            filteredRevenues.map((revenue) {
+                                          return Column(
+                                            children: [
+                                              GestureDetector(
+                                                onTap: () =>
+                                                    _showTransactionDetailPopup(
+                                                        context, revenue),
+                                                child: InfoBox(
+                                                  title: revenue.description ??
+                                                      'Receita',
+                                                  description:
+                                                      'R\$ ${revenue.amount.toStringAsFixed(2)}',
+                                                  creationDate: revenue
+                                                      .formattedTransactionDate,
+                                                  showBadge: false,
+                                                  borderColor:
+                                                      const Color(0xFF3D5936),
+                                                  badgeColor:
+                                                      const Color(0xFF3D5936),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 16),
+                                            ],
+                                          );
+                                        }).toList(),
                                       ),
-                                      const SizedBox(height: 16),
-                                    ],
-                                  );
-                                },
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                 ),

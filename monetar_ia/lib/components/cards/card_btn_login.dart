@@ -6,6 +6,7 @@ import 'package:monetar_ia/views/home_page.dart';
 import 'package:monetar_ia/services/auth_service.dart';
 import 'package:monetar_ia/utils/form_validations.dart';
 import 'dart:io';
+import 'package:monetar_ia/components/popups/reset_password_popup.dart'; // Importa o popup de redefinição de senha
 
 class CardBtnLogin extends StatefulWidget {
   const CardBtnLogin({super.key});
@@ -146,40 +147,6 @@ class _CardBtnLoginState extends State<CardBtnLogin>
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               const SizedBox(height: 20),
-              const Text(
-                'Qual sua próxima meta?',
-                style: TextStyle(
-                  fontFamily: 'Kantumruy',
-                  fontWeight: FontWeight.w400,
-                  fontSize: 24,
-                  color: Color(0xFFFFFFFF),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Nosso aplicativo é o seu parceiro ideal para alcançar metas e organizar suas finanças com eficiência. Transforme sua relação com o dinheiro e atinja seus objetivos com facilidade!',
-                style: TextStyle(
-                  fontFamily: 'Kumbh Sans',
-                  fontWeight: FontWeight.w400,
-                  fontSize: 16,
-                  color: Color(0xFFFFFFFF),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              const SizedBox(height: 380),
-              const Text(
-                'Monetar.ia',
-                style: TextStyle(
-                  fontFamily: 'Kumbh Sans',
-                  fontWeight: FontWeight.w400,
-                  fontSize: 50,
-                  height: 19.84 / 16,
-                  color: Color(0xFFFFFFFF),
-                ),
-                textAlign: TextAlign.center,
-              ),
               const SizedBox(height: 20),
               TextFormField(
                 controller: _emailController,
@@ -188,6 +155,11 @@ class _CardBtnLoginState extends State<CardBtnLogin>
                   labelText: 'Email',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                    borderSide:
+                        const BorderSide(color: Color(0xFF003566), width: 2),
                   ),
                   filled: true,
                   fillColor: Colors.white,
@@ -202,6 +174,7 @@ class _CardBtnLoginState extends State<CardBtnLogin>
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
+                  floatingLabelBehavior: FloatingLabelBehavior.never,
                 ),
                 keyboardType: TextInputType.emailAddress,
                 validator: validateEmail,
@@ -220,6 +193,11 @@ class _CardBtnLoginState extends State<CardBtnLogin>
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10.0),
                   ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                    borderSide:
+                        const BorderSide(color: Color(0xFF003566), width: 2),
+                  ),
                   filled: true,
                   fillColor: Colors.white,
                   contentPadding: const EdgeInsets.symmetric(
@@ -228,6 +206,7 @@ class _CardBtnLoginState extends State<CardBtnLogin>
                     color: Colors.grey[700],
                     fontSize: 16,
                   ),
+                  floatingLabelBehavior: FloatingLabelBehavior.never,
                   floatingLabelStyle: TextStyle(
                     color: Colors.grey[700],
                     fontSize: 16,
@@ -286,7 +265,12 @@ class _CardBtnLoginState extends State<CardBtnLogin>
               const SizedBox(height: 36.0),
               TextButton(
                 onPressed: () {
-                  // Ação ao clicar no link "Esqueceu a senha?"
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return const ResetPasswordPopup();
+                    },
+                  );
                 },
                 child: const Text(
                   'Esqueceu a senha?',

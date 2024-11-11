@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:monetar_ia/components/cards/card_btn_login.dart';
+// import 'package:monetar_ia/components/cards/card_btn_login.dart';
 
 class CardTitleLogin extends StatelessWidget {
   const CardTitleLogin({super.key});
@@ -33,7 +33,7 @@ class CardTitleLogin extends StatelessWidget {
               ),
             ),
           ),
-          const CardBtnLogin(),
+          // const CardBtnLogin(),
         ],
       ),
     );

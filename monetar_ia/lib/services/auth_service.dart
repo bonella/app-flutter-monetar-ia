@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'token_storage.dart';
 
 class AuthService {
-  final String _baseUrl = 'https://testeapi.monetaria.app.br';
+  final String _baseUrl = 'https://api.monetaria.app.br';
   final TokenStorage _tokenStorage = TokenStorage();
 
   Future<http.Response> signup({

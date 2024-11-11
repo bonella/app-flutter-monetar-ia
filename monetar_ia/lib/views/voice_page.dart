@@ -38,26 +38,22 @@ class _VoicePageState extends State<VoicePage> {
 
   Future<void> sendMessage(String text) async {
     try {
-      print('Enviando mensagem: $text'); // Verificar msg enviada
+      print('Enviando mensagem: $text');
       var response = await requestHttp.chatWithAI(text);
 
-      print('Resposta da API: ${response.body}'); // Verifica a resposta da API
+      print('Resposta da API: ${response.body}');
 
       if (response.statusCode == 200) {
-        var responseData = json.decode(response.body);
+        // Como a resposta é uma string simples, não é necessário fazer decode de JSON
+        String aiResponse = response.body; // A resposta é diretamente o texto
 
-        // Verifica se "texto_gerado_ia" está presente e se não é nulo
-        if (responseData['texto_gerado_ia'] != null) {
-          // Decodifica o JSON contido na string
-          var innerResponse = json.decode(responseData['texto_gerado_ia']);
-          String aiResponse = innerResponse['response'];
-
-          // Verifica se aiResponse não é nulo
-          historic.add(aiResponse);
+        // Verifica se aiResponse não é nulo ou vazio
+        if (aiResponse.isNotEmpty) {
+          historic.add(aiResponse); // Adiciona diretamente ao histórico
           _scrollToBottom();
           await _typeResponse(aiResponse);
         } else {
-          historic.add('Erro: texto_gerado_ia é nulo');
+          historic.add('Erro: resposta da IA vazia');
           _scrollToBottom();
         }
       } else {
@@ -79,8 +75,17 @@ class _VoicePageState extends State<VoicePage> {
         historic[historic.length - 1] = displayedText;
       });
       _scrollToBottom();
-      await Future.delayed(const Duration(milliseconds: 50));
+      await Future.delayed(const Duration(milliseconds: 30));
     }
+  }
+
+  void _sendUserMessage(String text) {
+    setState(() {
+      historic.add(text);
+    });
+    sendMessage(text);
+    message.clear();
+    _scrollToBottom();
   }
 
   void _scrollToBottom() {
@@ -101,77 +106,48 @@ class _VoicePageState extends State<VoicePage> {
           Column(
             children: [
               Container(
-                color: const Color(0xFF697077),
-                padding: const EdgeInsets.symmetric(vertical: 40),
-                child: Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white,
-                              border: Border.all(color: Colors.white, width: 2),
-                            ),
-                            child: ClipOval(
-                              child: Image.asset(
-                                'lib/assets/logo2.png',
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'Monetar.IA',
-                            style: TextStyle(
-                              fontFamily: 'Kumbh Sans',
-                              fontSize: 32,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'Como posso ajudar? ',
-                            style: TextStyle(
-                              fontFamily: 'Kumbh Sans',
-                              fontSize: 18,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          SizedBox(
-                            width: 60,
-                            height: 60,
-                            child: Image.asset(
-                              'lib/assets/monetar_rosto.png',
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                height: 10,
+                width: double.infinity,
+                height: 250,
                 decoration: const BoxDecoration(
                   color: Color(0xFF697077),
-                  borderRadius:
-                      BorderRadius.vertical(bottom: Radius.circular(20)),
+                  borderRadius: BorderRadius.vertical(
+                    bottom: Radius.circular(20),
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Monetar.IA',
+                      style: TextStyle(
+                        fontFamily: 'Kumbh Sans',
+                        fontWeight: FontWeight.w400,
+                        fontSize: 36,
+                        letterSpacing: 0.04,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 10),
+                    Image.asset(
+                      'lib/assets/monetar_rosto.png',
+                      height: 80,
+                      width: 100,
+                      fit: BoxFit.cover,
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Como posso ajudar?',
+                      style: TextStyle(
+                        fontFamily: 'Kumbh Sans',
+                        fontWeight: FontWeight.w400,
+                        fontSize: 22,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ),
               Expanded(
@@ -214,41 +190,60 @@ class _VoicePageState extends State<VoicePage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Text(
-                              'Fale algo ou digite uma mensagem:',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
                             Row(
                               children: [
                                 Expanded(
-                                  child: TextField(
+                                  child: TextFormField(
                                     controller: message,
                                     textCapitalization:
                                         TextCapitalization.sentences,
+                                    onFieldSubmitted: (text) {
+                                      if (text.isNotEmpty) {
+                                        _sendUserMessage(text);
+                                      }
+                                    },
                                     decoration: InputDecoration(
-                                        border: const OutlineInputBorder(),
-                                        suffixIcon: IconButton(
-                                          onPressed: () {
-                                            if (message.text.isNotEmpty) {
-                                              setState(() {
-                                                historic.add(message.text);
-                                              });
-                                              sendMessage(message.text);
-                                              message.clear();
-                                              _scrollToBottom();
-                                            }
-                                          },
-                                          icon: const Icon(Icons.send),
-                                          splashRadius: 1,
-                                          color: const Color(0xFF3D5936),
-                                        )),
+                                      labelText: 'Digite sua mensagem',
+                                      border: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10.0),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10.0),
+                                        borderSide: const BorderSide(
+                                            color: Color(0xFF003566), width: 2),
+                                      ),
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 16.0, vertical: 12.0),
+                                      labelStyle: TextStyle(
+                                          color: Colors.grey[700],
+                                          fontSize: 16),
+                                      floatingLabelBehavior:
+                                          FloatingLabelBehavior.never,
+                                    ),
                                   ),
+                                ),
+                                IconButton(
+                                  onPressed: () {
+                                    // Chama `sendMessage` ao pressionar o ícone "enviar"
+                                    if (message.text.isNotEmpty) {
+                                      _sendUserMessage(message.text);
+                                    }
+                                  },
+                                  icon: const Icon(Icons.send),
+                                  splashRadius: 1,
+                                  color: const Color(0xFF3D5936),
                                 ),
                               ],
                             ),
                           ],
                         ),
                       ),
+                      const SizedBox(height: 16),
                     ],
                   ),
                 ),
@@ -267,29 +262,20 @@ class _VoicePageState extends State<VoicePage> {
               borderColor: const Color(0xFF697077),
               iconColor:
                   listening ? const Color(0xFF8C1C03) : const Color(0xFF3D5936),
-              onPressed: () {
-                if (!listening) {
+              onPressed: () async {
+                if (listening) {
+                  setState(() {
+                    listening = false;
+                  });
+                  await _speechToText.stop();
+                } else {
                   setState(() {
                     listening = true;
                   });
-
-                  _speechToText.listen(
-                    listenFor: const Duration(seconds: 15),
-                    onResult: (result) {
-                      setState(() {
-                        if (result.finalResult) {
-                          listening = false;
-                          historic.add(result.recognizedWords);
-                          sendMessage(result.recognizedWords);
-                          _scrollToBottom();
-                        }
-                      });
-                    },
-                  );
-                } else {
-                  setState(() {
-                    listening = false;
-                    _speechToText.stop();
+                  await _speechToText.listen(onResult: (result) {
+                    setState(() {
+                      message.text = result.recognizedWords;
+                    });
                   });
                 }
               },
