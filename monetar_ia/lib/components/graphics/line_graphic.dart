@@ -15,11 +15,9 @@ class LineGraphic extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Ordena as transações por data (do mais antigo para o mais recente)
     List<Transaction> sortedTransactions = List.from(transactions)
       ..sort((a, b) => a.transactionDate.compareTo(b.transactionDate));
 
-    // Limita para as últimas 10 transações
     List<Transaction> lastTransactions = sortedTransactions.take(10).toList();
 
     List<FlSpot> revenueSpots = [];
@@ -27,38 +25,29 @@ class LineGraphic extends StatelessWidget {
 
     double maxAmount = 0;
 
-    // Preenche os pontos do gráfico com as últimas 10 transações
     for (int i = 0; i < lastTransactions.length; i++) {
       var transaction = lastTransactions[i];
       double amount = transaction.amount;
 
       if (transaction.type == 'INCOME') {
-        revenueSpots.add(FlSpot(i.toDouble(), amount)); // Receitas
+        revenueSpots.add(FlSpot(i.toDouble(), amount));
       } else if (transaction.type == 'EXPENSE') {
-        expenseSpots.add(FlSpot(i.toDouble(), amount)); // Despesas
+        expenseSpots.add(FlSpot(i.toDouble(), amount));
       }
 
-      // Atualiza o valor máximo de todas as transações
       maxAmount = amount > maxAmount ? amount : maxAmount;
     }
 
-    // Garante que o valor máximo não seja 0, definindo um valor mínimo
     maxAmount = maxAmount == 0 ? 100 : maxAmount;
 
-    // Verifica se há valores para as receitas e despesas
     bool hasRevenue = revenueSpots.isNotEmpty;
     bool hasExpense = expenseSpots.isNotEmpty;
 
-    // Define o número de divisões (labels) no eixo Y
     const int yLabelsCount = 8;
 
-    // Se o maxAmount for pequeno (como 10 ou 100), ajusta o intervalo para ser maior
     double yInterval = maxAmount / (yLabelsCount - 1);
-    yInterval = yInterval < 10
-        ? 10
-        : yInterval; // Garante que o intervalo não seja menor que 10
+    yInterval = yInterval < 10 ? 10 : yInterval;
 
-    // Garantir que o intervalo y nunca seja menor que 1
     yInterval = yInterval < 1 ? 1 : yInterval;
 
     return Container(

@@ -267,7 +267,7 @@ class _ExpensePageState extends State<ExpensePage> {
                       ? const Center(
                           child: CircularProgressIndicator(
                             valueColor: AlwaysStoppedAnimation<Color>(
-                                Color(0xFF8C1C03)),
+                                Color(0xFF003566)),
                           ),
                         )
                       : filteredExpenses.isEmpty

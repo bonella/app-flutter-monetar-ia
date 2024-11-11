@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:monetar_ia/components/headers/header_home.dart';
 import 'package:monetar_ia/components/boxes/info_box2.dart';
-
 import 'package:monetar_ia/components/graphics/line_graphic.dart';
 import 'package:monetar_ia/components/graphics/pizza_chart.dart';
 import 'package:monetar_ia/components/graphics/column_chart.dart';
@@ -19,6 +18,7 @@ import 'package:monetar_ia/components/buttons/date_btn.dart';
 import 'package:monetar_ia/models/goal.dart';
 import 'package:monetar_ia/models/transaction.dart';
 import 'package:monetar_ia/services/request_http.dart';
+import 'package:monetar_ia/services/token_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:monetar_ia/utils/calculate_total.dart';
 
@@ -52,8 +52,7 @@ class _HomePageState extends State<HomePage> {
   bool hasData = false;
   late PageController pageController;
   int _currentPage = 0;
-  bool _isLoading =
-      true; // Altere para uma variável de instância e inicialize como 'true'
+  bool _isLoading = true;
   final RequestHttp _requestHttp = RequestHttp();
 
   @override
@@ -71,33 +70,27 @@ class _HomePageState extends State<HomePage> {
     _loadYearlyComparison();
     pageController = PageController();
     setState(() {
-      _isLoading =
-          true; // Defina o valor de _isLoading como true ao iniciar o carregamento
+      _isLoading = true;
     });
   }
 
   @override
   void dispose() {
-    // Certifique-se de descartar o controller quando o widget for removido
     pageController.dispose();
     super.dispose();
   }
 
   Future<void> navigateToNextPage() async {
-    // Realiza uma operação assíncrona
     await Future.delayed(const Duration(seconds: 2));
 
-    // Verifique se o widget ainda está montado antes de fazer qualquer operação
     if (mounted) {
-      // Agora, é seguro usar o PageController
       pageController.jumpToPage(1);
     } else {
-      // O widget foi descartado, então não tentamos interagir com o controller
-      print('O widget foi descartado.');
+      // print('O widget foi descartado.');
     }
   }
 
-  // 1. Carregar as 10 últimas transações para o gráfico de linha
+  // 1. Carregar as 10 ultimas transações para o gráfico de linha
   Future<void> _loadLatestTransactions() async {
     try {
       var response = await _requestHttp.get('transactions');
@@ -108,10 +101,8 @@ class _HomePageState extends State<HomePage> {
               .map((data) => Transaction.fromJson(data))
               .toList();
 
-          // Limitar para as 10 últimas transações
           last10Transactions = last10Transactions.take(10).toList();
 
-          // Separando as transações para gráficos
           revenueTransactions = last10Transactions
               .where((transaction) => transaction.type == 'INCOME')
               .toList();
@@ -120,7 +111,6 @@ class _HomePageState extends State<HomePage> {
               .where((transaction) => transaction.type == 'EXPENSE')
               .toList();
 
-          // Filtragem e mapeamento para os gráficos
           revenueSpots = revenueTransactions
               .asMap()
               .map((index, transaction) => MapEntry(
@@ -146,19 +136,21 @@ class _HomePageState extends State<HomePage> {
       }
     } catch (e) {
       print('Erro ao carregar as últimas transações: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
   // 2. Carregar transações do mês selecionado para o gráfico de pizza
   Future<void> _loadMonthlyTransactions() async {
     try {
-      // Definir o primeiro e o último dia do mês atual
       DateTime firstDayOfMonth =
           DateTime(DateTime.now().year, DateTime.now().month, 1);
       DateTime lastDayOfMonth =
           DateTime(DateTime.now().year, DateTime.now().month + 1, 0);
 
-      // Realizar a requisição à API
       var response = await _requestHttp.get(
         'transactions?start_date=${firstDayOfMonth.toIso8601String()}&end_date=${lastDayOfMonth.toIso8601String()}',
       );
@@ -168,16 +160,13 @@ class _HomePageState extends State<HomePage> {
         List<Transaction> transactions =
             decodedResponse.map((data) => Transaction.fromJson(data)).toList();
 
-        // Filtra as transações de receitas e despesas
         Map<String, double> summary = {
           'Receitas': transactions
-              .where((t) => t.type == 'INCOME') // Corrigido para 'INCOME'
-              .fold(0.0,
-                  (sum, t) => sum + t.amount), // Usando diretamente t.amount
+              .where((t) => t.type == 'INCOME')
+              .fold(0.0, (sum, t) => sum + t.amount),
           'Despesas': transactions
-              .where((t) => t.type == 'EXPENSE') // Corrigido para 'EXPENSE'
-              .fold(0.0,
-                  (sum, t) => sum + t.amount), // Usando diretamente t.amount
+              .where((t) => t.type == 'EXPENSE')
+              .fold(0.0, (sum, t) => sum + t.amount),
         };
 
         setState(() {
@@ -189,9 +178,14 @@ class _HomePageState extends State<HomePage> {
       }
     } catch (e) {
       print('Erro ao carregar transações mensais: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
+  // 2. Carregar transações para o gráfico de coluna
   Future<void> _loadYearlyComparison() async {
     try {
       int currentYear = DateTime.now().year;
@@ -241,6 +235,10 @@ class _HomePageState extends State<HomePage> {
       }
     } catch (e) {
       print('Erro ao carregar comparação anual: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -421,6 +419,10 @@ class _HomePageState extends State<HomePage> {
       }
     } catch (e) {
       print('Erro ao carregar as metas: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -460,8 +462,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _logout(BuildContext context) async {
+    TokenStorage tokenStorage = TokenStorage();
+    await tokenStorage.clearToken();
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.remove('stayConnected');
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const LoginPage()),
@@ -477,16 +483,23 @@ class _HomePageState extends State<HomePage> {
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF003566),
+            ),
             child: const Text('Cancelar'),
           ),
           TextButton(
             onPressed: () async {
               await _logout(context);
+
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => const LoginPage()),
               );
             },
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF003566),
+            ),
             child: const Text('Sair'),
           ),
         ],
@@ -494,7 +507,7 @@ class _HomePageState extends State<HomePage> {
     );
 
     if (shouldExit == true) {
-      _logout(context);
+      await _logout(context);
     }
 
     return shouldExit ?? false;
@@ -532,163 +545,186 @@ class _HomePageState extends State<HomePage> {
                     onNextMonth: () {},
                   ),
                   Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const SizedBox(height: 16),
-                          WhiteCard(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                // Verificando a variável hasData
-                                if (hasData) ...[
-                                  // Exibe os InfoBox2 quando os dados estiverem disponíveis
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16.0, vertical: 8.0),
-                                    child: InfoBox2(
-                                      title: lastTransaction?.description !=
-                                              null
-                                          ? 'Última Receita: ${lastTransaction!.description}'
-                                          : 'Sem Receitas',
-                                      description: lastTransaction != null
-                                          ? 'R\$ ${lastTransaction!.amount.toStringAsFixed(2)}'
-                                          : '',
-                                      creationDate: lastTransaction != null
-                                          ? DateFormat('dd/MM/yyyy').format(
-                                              lastTransaction!.transactionDate)
-                                          : 'Data não disponível',
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16.0, vertical: 8.0),
-                                    child: InfoBox2(
-                                      title: lastExpense?.description != null
-                                          ? 'Última Despesa: ${lastExpense!.description}'
-                                          : 'Sem Despesas',
-                                      description: lastExpense != null
-                                          ? 'R\$ ${lastExpense!.amount.toStringAsFixed(2)}'
-                                          : 'R\$ 0.00',
-                                      borderColor: const Color(0xFF8C1C03),
-                                      badgeColor: const Color(0xFF003566),
-                                      creationDate: lastExpense != null
-                                          ? DateFormat('dd/MM/yyyy')
-                                              .format(lastExpense!.createdAt)
-                                          : 'Data não disponível',
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16.0, vertical: 8.0),
-                                    child: InfoBox2(
-                                      title: lastGoal?.name != null
-                                          ? 'Última Meta: ${lastGoal!.name}'
-                                          : 'Sem Metas',
-                                      description: lastGoal != null
-                                          ? 'R\$ ${lastGoal!.targetAmount.toStringAsFixed(2)}'
-                                          : 'R\$ 0.00',
-                                      showBadge: lastGoal != null,
-                                      percentage: lastGoal != null
-                                          ? '${lastGoal!.percentage}%'
-                                          : '0%',
-                                      borderColor: const Color(0xFF003566),
-                                      badgeColor: const Color(0xFF003566),
-                                      creationDate: lastGoal != null
-                                          ? DateFormat('dd/MM/yyyy')
-                                              .format(lastGoal!.createdAt)
-                                          : 'Data não disponível',
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16.0),
-                                    child: SizedBox(
-                                      height: 300,
-                                      child: PageView(
-                                        controller: pageController,
-                                        onPageChanged: (int page) {
-                                          if (mounted) {
-                                            setState(() {
-                                              _currentPage = page;
-                                            });
-                                          }
-                                        },
+                    child: _isLoading
+                        ? const Center(
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  Color(0xFF003566)),
+                            ),
+                          )
+                        : hasData
+                            ? SingleChildScrollView(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    const SizedBox(height: 16),
+                                    WhiteCard(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
                                         children: [
-                                          LineGraphic(
-                                            title: 'Últimas Transações',
-                                            transactions: last10Transactions,
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 16.0,
+                                                vertical: 8.0),
+                                            child: InfoBox2(
+                                              title: lastTransaction
+                                                          ?.description !=
+                                                      null
+                                                  ? 'Última Receita: ${lastTransaction!.description}'
+                                                  : 'Sem Receitas',
+                                              description: lastTransaction !=
+                                                      null
+                                                  ? 'R\$ ${lastTransaction!.amount.toStringAsFixed(2)}'
+                                                  : '',
+                                              creationDate: lastTransaction !=
+                                                      null
+                                                  ? DateFormat('dd/MM/yyyy')
+                                                      .format(lastTransaction!
+                                                          .transactionDate)
+                                                  : 'Data não disponível',
+                                            ),
                                           ),
-                                          PizzaChart(
-                                            title: 'Resumo do Mês',
-                                            currentMonthRevenue:
-                                                monthlySummary['Receitas'] ??
-                                                    0.0,
-                                            currentMonthExpense:
-                                                monthlySummary['Despesas'] ??
-                                                    0.0,
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 16.0,
+                                                vertical: 8.0),
+                                            child: InfoBox2(
+                                              title: lastExpense?.description !=
+                                                      null
+                                                  ? 'Última Despesa: ${lastExpense!.description}'
+                                                  : 'Sem Despesas',
+                                              description: lastExpense != null
+                                                  ? 'R\$ ${lastExpense!.amount.toStringAsFixed(2)}'
+                                                  : 'R\$ 0.00',
+                                              borderColor:
+                                                  const Color(0xFF8C1C03),
+                                              badgeColor:
+                                                  const Color(0xFF003566),
+                                              creationDate: lastExpense != null
+                                                  ? DateFormat('dd/MM/yyyy')
+                                                      .format(lastExpense!
+                                                          .createdAt)
+                                                  : 'Data não disponível',
+                                            ),
                                           ),
-                                          ColumnChart(
-                                            title: 'Comparação Anual',
-                                            currentYearRevenue:
-                                                yearlyComparison[
-                                                        'Receitas Atual'] ??
-                                                    0.0,
-                                            currentYearExpense:
-                                                yearlyComparison[
-                                                        'Despesas Atual'] ??
-                                                    0.0,
-                                            previousYearRevenue:
-                                                yearlyComparison[
-                                                        'Receitas Anterior'] ??
-                                                    0.0,
-                                            previousYearExpense:
-                                                yearlyComparison[
-                                                        'Despesas Anterior'] ??
-                                                    0.0,
-                                            data: yearlyComparison,
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 16.0,
+                                                vertical: 8.0),
+                                            child: InfoBox2(
+                                              title: lastGoal?.name != null
+                                                  ? 'Última Meta: ${lastGoal!.name}'
+                                                  : 'Sem Metas',
+                                              description: lastGoal != null
+                                                  ? 'R\$ ${lastGoal!.targetAmount.toStringAsFixed(2)}'
+                                                  : 'R\$ 0.00',
+                                              showBadge: lastGoal != null,
+                                              percentage: lastGoal != null
+                                                  ? '${lastGoal!.percentage}%'
+                                                  : '0%',
+                                              borderColor:
+                                                  const Color(0xFF003566),
+                                              badgeColor:
+                                                  const Color(0xFF003566),
+                                              creationDate: lastGoal != null
+                                                  ? DateFormat('dd/MM/yyyy')
+                                                      .format(
+                                                          lastGoal!.createdAt)
+                                                  : 'Data não disponível',
+                                            ),
                                           ),
+                                          const SizedBox(height: 8),
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 16.0),
+                                            child: SizedBox(
+                                              height: 300,
+                                              child: PageView(
+                                                controller: pageController,
+                                                onPageChanged: (int page) {
+                                                  if (mounted) {
+                                                    setState(() {
+                                                      _currentPage = page;
+                                                    });
+                                                  }
+                                                },
+                                                children: [
+                                                  LineGraphic(
+                                                    title: 'Últimas Transações',
+                                                    transactions:
+                                                        last10Transactions,
+                                                  ),
+                                                  PizzaChart(
+                                                    title: 'Resumo do Mês',
+                                                    currentMonthRevenue:
+                                                        monthlySummary[
+                                                                'Receitas'] ??
+                                                            0.0,
+                                                    currentMonthExpense:
+                                                        monthlySummary[
+                                                                'Despesas'] ??
+                                                            0.0,
+                                                  ),
+                                                  ColumnChart(
+                                                    title: 'Comparação Anual',
+                                                    currentYearRevenue:
+                                                        yearlyComparison[
+                                                                'Receitas Atual'] ??
+                                                            0.0,
+                                                    currentYearExpense:
+                                                        yearlyComparison[
+                                                                'Despesas Atual'] ??
+                                                            0.0,
+                                                    previousYearRevenue:
+                                                        yearlyComparison[
+                                                                'Receitas Anterior'] ??
+                                                            0.0,
+                                                    previousYearExpense:
+                                                        yearlyComparison[
+                                                                'Despesas Anterior'] ??
+                                                            0.0,
+                                                    data: yearlyComparison,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 16),
+                                          // Indicadores de Página
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: List.generate(
+                                              3,
+                                              (index) => Container(
+                                                margin:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 5),
+                                                height: 10,
+                                                width: 10,
+                                                decoration: BoxDecoration(
+                                                  color: _currentPage == index
+                                                      ? Colors.green
+                                                      : Colors.grey,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 32),
                                         ],
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  // Indicadores de Página
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: List.generate(
-                                      3, // Número de gráficos
-                                      (index) => Container(
-                                        margin: const EdgeInsets.symmetric(
-                                            horizontal: 5),
-                                        height: 10,
-                                        width: 10,
-                                        decoration: BoxDecoration(
-                                          color: _currentPage == index
-                                              ? Colors.green
-                                              : Colors.grey,
-                                          shape: BoxShape.circle,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 32),
-                                ] else ...[
-                                  // Exibe a imagem caso não haja dados
-                                  Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: Image.asset(
-                                        'lib/assets/fundo_despesas2.png'),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
+                                  ],
+                                ),
+                              )
+                            : Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child:
+                                    Image.asset('lib/assets/monetar_home.png'),
+                              ),
                   ),
                   const Footer(
                     backgroundColor: Color(0xFF738C61),
