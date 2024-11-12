@@ -44,12 +44,9 @@ class _VoicePageState extends State<VoicePage> {
       print('Resposta da API: ${response.body}');
 
       if (response.statusCode == 200) {
-        // Como a resposta é uma string simples, não é necessário fazer decode de JSON
-        String aiResponse = response.body; // A resposta é diretamente o texto
-
-        // Verifica se aiResponse não é nulo ou vazio
+        String aiResponse = utf8.decode(response.bodyBytes);
         if (aiResponse.isNotEmpty) {
-          historic.add(aiResponse); // Adiciona diretamente ao histórico
+          historic.add(aiResponse);
           _scrollToBottom();
           await _typeResponse(aiResponse);
         } else {

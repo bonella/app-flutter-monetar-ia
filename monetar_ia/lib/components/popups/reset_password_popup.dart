@@ -30,17 +30,31 @@ class _ResetPasswordPopupState extends State<ResetPasswordPopup> {
       });
 
       try {
-        await _requestHttp.requestPasswordResetCode(email);
-        Navigator.of(context).pop();
-        showDialog(
-          context: context,
-          builder: (context) {
-            return EnterCodePopup(email: email);
-          },
-        );
+        final response = await _requestHttp.requestPasswordResetCode(email);
+
+        if (response.statusCode == 200) {
+          Navigator.of(context).pop();
+          showDialog(
+            context: context,
+            builder: (context) {
+              return EnterCodePopup(email: email);
+            },
+          );
+        } else if (response.statusCode == 404) {
+          setState(() {
+            _emailError = 'E-mail não cadastrado';
+            _formKey.currentState!.validate();
+          });
+        } else {
+          // Outros erros (ex: 500, 422, etc.)
+          setState(() {
+            _emailError = 'Erro ao enviar código. Tente novamente.';
+            _formKey.currentState!.validate();
+          });
+        }
       } catch (error) {
         setState(() {
-          _emailError = 'E-mail não cadastrado';
+          _emailError = 'Erro ao conectar ao servidor';
           _formKey.currentState!.validate();
         });
       }
@@ -132,7 +146,12 @@ class _ResetPasswordPopupState extends State<ResetPasswordPopup> {
   }) {
     return TextFormField(
       controller: controller,
-      onChanged: onChanged,
+      onChanged: (value) {
+        setState(() {
+          _emailError = null;
+        });
+        onChanged(value);
+      },
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(color: Color.fromARGB(255, 99, 99, 99)),

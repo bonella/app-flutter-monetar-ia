@@ -93,7 +93,8 @@ class _ExpensePageState extends State<ExpensePage> {
 
         if (response.statusCode == 200) {
           setState(() {
-            expenses = (json.decode(response.body) as List)
+            var decodedResponse = utf8.decode(response.bodyBytes);
+            expenses = (json.decode(decodedResponse) as List)
                 .map((expense) => Transaction.fromJson(expense))
                 .toList();
 

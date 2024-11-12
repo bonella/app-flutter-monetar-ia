@@ -32,6 +32,7 @@ class _ChangePasswordPopupState extends State<ChangePasswordPopup> {
     if (_formKey.currentState!.validate()) {
       try {
         await _requestHttp.changePassword(widget.email, newPassword);
+
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Senha alterada com sucesso!')),

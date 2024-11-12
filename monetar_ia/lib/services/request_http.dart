@@ -90,17 +90,13 @@ class RequestHttp {
 
       // Filtra e soma os valores das despesas do mês especificado
       for (var despesa in despesas) {
-        // Supondo que 'data' seja a data da despesa
-        String dataDespesa =
-            despesa['data']; // Ajuste conforme a estrutura real
+        String dataDespesa = despesa['data'];
         if (dataDespesa.contains(mes)) {
-          // Verifica se a data contém o mês
-          total +=
-              despesa['valor']?.toDouble() ?? 0.0; // Ajuste o campo 'valor'
+          total += despesa['valor']?.toDouble() ?? 0.0;
         }
       }
 
-      return total; // Retorna o total de despesas para o mês especificado
+      return total;
     } else {
       throw Exception(
           'Erro ao obter total de despesas: ${response.statusCode}');
@@ -212,10 +208,8 @@ class RequestHttp {
   Future<http.Response> chatWithAI(String texto) async {
     final token = await AuthService().getAuthToken();
 
-    // Configure a URL da API
     final url = '$_baseUrl/chat/ia/$texto';
 
-    // Faça a requisição GET
     final response = await http.get(
       Uri.parse(url),
       headers: {
@@ -227,25 +221,9 @@ class RequestHttp {
     return _handleResponse(response);
   }
 
-  // Método para redefinir a senha do usuário
-  Future<http.Response> updatePassword(String email, String newPassword) async {
-    Map<String, dynamic> data = {
-      "email": email,
-      "new_password": newPassword,
-    };
-
-    return await post('new-password', data);
-  }
-
   // Método para validar o código de redefinição de senha
   Future<http.Response> validateResetCode(String email, int resetCode) async {
-    final url = Uri.parse('$_baseUrl/validate-reset-code');
-
-    final token = await _tokenStorage.getToken();
-
-    if (token == null) {
-      throw Exception('Token não encontrado. Faça login novamente.');
-    }
+    final url = Uri.parse('https://api.monetaria.app.br/validate-reset-code');
 
     final body = jsonEncode({
       "email": email,
@@ -256,7 +234,6 @@ class RequestHttp {
       url,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'bearer $token',
       },
       body: body,
     );
@@ -269,37 +246,44 @@ class RequestHttp {
     }
   }
 
-  // Método para gerar e enviar um código de redefinição de senha
+  // Método para gerar e enviar um código de redefinição de senha sem autenticação
   Future<http.Response> requestPasswordResetCode(String email) async {
     Map<String, dynamic> data = {
       "email": email,
     };
 
-    return await post('password-reset-code', data);
+    final uri = Uri.parse('https://api.monetaria.app.br/password-reset-code');
+    return await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(data),
+    );
   }
 
-  sendPasswordResetCode(String email) {}
-
   // Método para redefinir a senha usando o endpoint '/new-password'
-  Future<void> changePassword(String email, String newPassword) async {
-    try {
-      Map<String, dynamic> data = {
-        "email": email,
-        "new_password": newPassword,
-      };
+  Future<http.Response> changePassword(String email, String newPassword) async {
+    Map<String, dynamic> data = {
+      "email": email,
+      "new_password": newPassword,
+    };
 
-      final response = await post('new-password', data);
+    final url = Uri.parse('https://api.monetaria.app.br/new-password');
 
-      if (response.statusCode == 200) {
-        print('Senha redefinida com sucesso!');
-      } else if (response.statusCode == 400) {
-        throw Exception('Erro: Usuário não encontrado ou código não validado.');
-      } else if (response.statusCode == 422) {
-        throw Exception('Erro de validação: Verifique os dados enviados.');
-      }
-    } catch (e) {
-      print('Erro ao redefinir senha: $e');
-      throw Exception(e);
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(data),
+    );
+
+    if (response.statusCode == 200) {
+      return response;
+    } else {
+      throw Exception(
+          jsonDecode(response.body)['detail'] ?? 'Erro desconhecido');
     }
   }
 }

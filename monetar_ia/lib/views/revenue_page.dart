@@ -94,7 +94,8 @@ class _RevenuePageState extends State<RevenuePage> {
 
         if (response.statusCode == 200) {
           setState(() {
-            revenues = (json.decode(response.body) as List)
+            var decodedResponse = utf8.decode(response.bodyBytes);
+            revenues = (json.decode(decodedResponse) as List)
                 .map((revenue) => Transaction.fromJson(revenue))
                 .toList();
 
