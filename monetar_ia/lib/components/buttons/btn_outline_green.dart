@@ -14,12 +14,12 @@ class BtnOutlineGreen extends StatelessWidget {
     this.textColor = const Color(0xFF738C61),
     this.borderColor = const Color(0xFF738C61),
     this.isLoading = false,
+    required int width,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 260,
       height: 50,
       decoration: BoxDecoration(
         color: Colors.white,

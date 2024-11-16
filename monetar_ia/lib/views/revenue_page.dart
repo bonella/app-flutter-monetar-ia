@@ -251,7 +251,7 @@ class _RevenuePageState extends State<RevenuePage> {
                   onNextMonth: _onNextMonth,
                   onDateChanged: _onDateChanged,
                   backgroundColor: const Color(0xFF3D5936),
-                  circleIcon: Icons.attach_money_outlined,
+                  imagePath: 'lib/assets/logo_revenue.png',
                   circleIconColor: Colors.white,
                   circleBackgroundColor: const Color(0xFF3D5936),
                   label: 'Receitas de $monthDisplay',
@@ -301,6 +301,8 @@ class _RevenuePageState extends State<RevenuePage> {
                                                     _showTransactionDetailPopup(
                                                         context, revenue),
                                                 child: InfoBox(
+                                                  backgroundColor:
+                                                      const Color(0xFFE4F2E6),
                                                   title: revenue.description ??
                                                       'Receita',
                                                   description:

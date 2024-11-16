@@ -251,15 +251,19 @@ class _CardBtnLoginState extends State<CardBtnLogin>
               ),
               const SizedBox(height: 16.0),
               Center(
-                child: BtnOutlineGreen(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const RegisterPage()),
-                    );
-                  },
-                  text: 'Cadastrar',
+                child: SizedBox(
+                  width: 260, // Garante que o tamanho seja de 260 pixels
+                  child: BtnOutlineGreen(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const RegisterPage()),
+                      );
+                    },
+                    text: 'Cadastrar',
+                    width: 260,
+                  ),
                 ),
               ),
               const SizedBox(height: 36.0),

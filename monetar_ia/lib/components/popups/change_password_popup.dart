@@ -41,6 +41,7 @@ class _ChangePasswordPopupState extends State<ChangePasswordPopup> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Erro ao alterar a senha.')),
         );
+        print(e);
       }
     }
   }

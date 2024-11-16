@@ -21,6 +21,7 @@ dependencies:
   shared_preferences: ^2.0.0
   intl: ^0.18.1
   jwt_decoder: ^2.0.1
+  flutter_svg: ^2.0.10+1
 
 dev_dependencies:
   flutter_test:
@@ -40,6 +41,11 @@ flutter:
     - lib/assets/monetar_corpo.png
     - lib/assets/monetar_corpo2.png
     - lib/assets/monetar_home.png
+    - lib/assets/profile.png
+    - lib/assets/logo_revenue.png
+    - lib/assets/logo_expense.png
+    - lib/assets/logo_goal.png
+    - lib/assets/monetar_speak.png
 
 flutter_icons:
   android: true

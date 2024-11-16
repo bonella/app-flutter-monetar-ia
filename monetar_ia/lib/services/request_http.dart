@@ -192,7 +192,30 @@ class RequestHttp {
   }
 
   Future<http.Response> createCategory(Category category) async {
-    return await post('categories', category.toJson());
+    // Obtém o ID do usuário
+    final userId = await getUserId();
+    if (userId == null) {
+      throw Exception('Não foi possível obter o ID do usuário.');
+    }
+
+    // Prepara os dados para a criação da categoria
+    final Map<String, dynamic> categoryData = {
+      "name": category.name,
+      "type": category.type,
+      "user_id": userId,
+    };
+
+    // Faz a requisição POST para criar a categoria
+    final response = await post('categories/create', categoryData);
+
+    // Verifica se a criação foi bem-sucedida
+    if (response.statusCode == 201) {
+      print('Categoria criada com sucesso');
+      return response;
+    } else {
+      print('Erro ao criar categoria: ${response.statusCode}');
+      throw Exception('Erro ao criar categoria: ${response.body}');
+    }
   }
 
   Future<http.Response> updateCategory(
@@ -284,6 +307,36 @@ class RequestHttp {
     } else {
       throw Exception(
           jsonDecode(response.body)['detail'] ?? 'Erro desconhecido');
+    }
+  }
+
+  // Método para atualizar o usuário autenticado (nome e/ou sobrenome)
+  Future<http.Response> updateUser({String? name, String? lastName}) async {
+    Map<String, dynamic> userUpdateData = {};
+
+    if (name != null && name.isNotEmpty) {
+      userUpdateData['name'] = name;
+    }
+    if (lastName != null && lastName.isNotEmpty) {
+      userUpdateData['last_name'] = lastName;
+    }
+
+    if (userUpdateData.isEmpty) {
+      throw Exception('Nenhum campo para atualizar foi fornecido.');
+    }
+
+    final response = await put('users/update', userUpdateData);
+
+    if (response.statusCode == 200) {
+      print('Usuário atualizado com sucesso.');
+      return response;
+    } else if (response.statusCode == 404) {
+      throw Exception('Usuário não encontrado.');
+    } else if (response.statusCode == 422) {
+      final errorDetails = jsonDecode(response.body)['detail'];
+      throw Exception('Erro de validação: $errorDetails');
+    } else {
+      throw Exception('Erro ao atualizar usuário: ${response.body}');
     }
   }
 }

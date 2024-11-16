@@ -143,6 +143,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   text: 'Cadastrar',
                   isLoading: _isLoading,
                   onPressed: _register,
+                  width: 60,
                 ),
               ),
             ),

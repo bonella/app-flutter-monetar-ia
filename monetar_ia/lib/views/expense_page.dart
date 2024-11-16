@@ -256,7 +256,7 @@ class _ExpensePageState extends State<ExpensePage> {
                   onNextMonth: _onNextMonth,
                   onDateChanged: _onDateChanged,
                   backgroundColor: const Color(0xFF8C1C03),
-                  circleIcon: Icons.money_off_outlined,
+                  imagePath: 'lib/assets/logo_expense.png',
                   circleIconColor: Colors.white,
                   circleBackgroundColor: const Color(0xFF8C1C03),
                   label: 'Despesas de $monthDisplay',
@@ -305,6 +305,8 @@ class _ExpensePageState extends State<ExpensePage> {
                                                     _showTransactionDetailPopup(
                                                         context, expense),
                                                 child: InfoBox(
+                                                  backgroundColor:
+                                                      const Color(0xFFFFD6D6),
                                                   title: expense.description ??
                                                       'Despesa',
                                                   description:

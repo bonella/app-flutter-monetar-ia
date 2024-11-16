@@ -57,6 +57,7 @@ class FirstStepsPage2 extends StatelessWidget {
               width: 260,
               child: BtnOutlineGreen(
                 text: 'Próximo',
+                width: 260,
                 onPressed: () {
                   Navigator.push(
                     context,
