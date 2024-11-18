@@ -5,6 +5,7 @@ class InfoBox extends StatelessWidget {
   final String description;
   final bool showBadge;
   final String percentage;
+  final Color backgroundColor;
   final Color borderColor;
   final Color badgeColor;
   final String creationDate;
@@ -17,6 +18,7 @@ class InfoBox extends StatelessWidget {
     required this.description,
     this.showBadge = false,
     this.percentage = '',
+    this.backgroundColor = const Color(0xFF3D5936),
     this.borderColor = const Color(0xFF3D5936),
     this.badgeColor = const Color(0xFF3D5936),
     required this.creationDate,
@@ -37,13 +39,13 @@ class InfoBox extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: backgroundColor,
             borderRadius: BorderRadius.circular(10),
             border: Border(
               top: BorderSide.none,
               right: BorderSide.none,
-              left: BorderSide(color: borderColor, width: 2),
-              bottom: BorderSide(color: borderColor, width: 2),
+              left: BorderSide(color: borderColor, width: 5),
+              bottom: BorderSide(color: borderColor, width: 5),
             ),
             boxShadow: [
               BoxShadow(
@@ -57,16 +59,34 @@ class InfoBox extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontFamily: 'Roboto',
-                  fontWeight: FontWeight.w400,
-                  fontSize: 12,
-                  color: Color(0xFF697077),
-                ),
-                overflow: TextOverflow.ellipsis,
+              // Title and Edit Icon
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        fontFamily: 'Roboto',
+                        fontWeight: FontWeight.w400,
+                        fontSize: 14,
+                        color: Color(0xFF697077),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (isEditable)
+                    IconButton(
+                      icon: const Icon(
+                        Icons.edit,
+                        color: Color(0xFF3D5936),
+                        size: 20,
+                      ),
+                      onPressed:
+                          onTap, // Call onTap when the edit button is pressed
+                    ),
+                ],
               ),
+              // Description and Badge
               Row(
                 children: [
                   Expanded(
@@ -104,6 +124,7 @@ class InfoBox extends StatelessWidget {
                     ),
                 ],
               ),
+              // Creation Date
               Text(
                 'Data da criação: $creationDate',
                 style: const TextStyle(

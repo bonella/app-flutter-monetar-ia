@@ -94,7 +94,8 @@ class _RevenuePageState extends State<RevenuePage> {
 
         if (response.statusCode == 200) {
           setState(() {
-            revenues = (json.decode(response.body) as List)
+            var decodedResponse = utf8.decode(response.bodyBytes);
+            revenues = (json.decode(decodedResponse) as List)
                 .map((revenue) => Transaction.fromJson(revenue))
                 .toList();
 
@@ -250,7 +251,7 @@ class _RevenuePageState extends State<RevenuePage> {
                   onNextMonth: _onNextMonth,
                   onDateChanged: _onDateChanged,
                   backgroundColor: const Color(0xFF3D5936),
-                  circleIcon: Icons.attach_money_outlined,
+                  imagePath: 'lib/assets/logo_revenue.png',
                   circleIconColor: Colors.white,
                   circleBackgroundColor: const Color(0xFF3D5936),
                   label: 'Receitas de $monthDisplay',
@@ -300,6 +301,8 @@ class _RevenuePageState extends State<RevenuePage> {
                                                     _showTransactionDetailPopup(
                                                         context, revenue),
                                                 child: InfoBox(
+                                                  backgroundColor:
+                                                      const Color(0xFFE4F2E6),
                                                   title: revenue.description ??
                                                       'Receita',
                                                   description:

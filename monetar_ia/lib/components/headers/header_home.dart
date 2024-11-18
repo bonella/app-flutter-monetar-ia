@@ -22,15 +22,18 @@ class HeaderHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
-      color: Colors.white,
       child: Stack(
         children: [
           Container(
             height: 220,
             decoration: const BoxDecoration(
-              color: Color(0xFF738C61),
+              gradient: LinearGradient(
+                colors: [Color(0xFF5A9276), Color(0xFF3D5936)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(20),
                 bottomRight: Radius.circular(20),
@@ -40,11 +43,42 @@ class HeaderHome extends StatelessWidget {
           Column(
             children: [
               Padding(
-                padding: const EdgeInsets.only(top: 40.0, left: 16.0),
+                padding: const EdgeInsets.only(top: 40.0),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      child: ClipOval(
+                        child: Image.asset(
+                          'lib/assets/logo2.png',
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
                     const SizedBox(width: 8),
+                    const Text(
+                      'Monetar.IA',
+                      style: TextStyle(
+                        fontFamily: 'Kumbh Sans',
+                        fontSize: 32,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
                     Text(
                       'Olá, $name',
                       style: const TextStyle(
@@ -52,15 +86,6 @@ class HeaderHome extends StatelessWidget {
                         fontSize: 20,
                       ),
                     ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0, left: 16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    dateButton,
                   ],
                 ),
               ),
@@ -88,23 +113,10 @@ class HeaderHome extends StatelessWidget {
                               shape: BoxShape.circle,
                               border: Border.all(color: Colors.white, width: 2),
                             ),
-                            child: Center(
-                              child: IconButton(
-                                icon: const Icon(
-                                  Icons.keyboard_arrow_up,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const RevenuePage(),
-                                    ),
-                                  );
-                                },
-                                padding: EdgeInsets.zero,
-                              ),
+                            child: const Icon(
+                              Icons.keyboard_arrow_up,
+                              color: Colors.white,
+                              size: 20,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -118,7 +130,9 @@ class HeaderHome extends StatelessWidget {
                               Text(
                                 'R\$ ${totalRevenue.toStringAsFixed(2)}',
                                 style: const TextStyle(
-                                    color: Colors.white, fontSize: 14),
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
                               ),
                             ],
                           ),
@@ -144,23 +158,10 @@ class HeaderHome extends StatelessWidget {
                               shape: BoxShape.circle,
                               border: Border.all(color: Colors.white, width: 2),
                             ),
-                            child: Center(
-                              child: IconButton(
-                                icon: const Icon(
-                                  Icons.keyboard_arrow_down,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const ExpensePage(),
-                                    ),
-                                  );
-                                },
-                                padding: EdgeInsets.zero,
-                              ),
+                            child: const Icon(
+                              Icons.keyboard_arrow_down,
+                              color: Colors.white,
+                              size: 20,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -174,7 +175,9 @@ class HeaderHome extends StatelessWidget {
                               Text(
                                 'R\$ ${totalExpense.toStringAsFixed(2)}',
                                 style: const TextStyle(
-                                    color: Colors.white, fontSize: 14),
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
                               ),
                             ],
                           ),

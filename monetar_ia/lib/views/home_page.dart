@@ -10,7 +10,6 @@ import 'package:monetar_ia/components/graphics/column_chart.dart';
 import 'package:monetar_ia/views/goal_page.dart';
 import 'package:monetar_ia/views/profile_page.dart';
 import 'package:monetar_ia/views/voice_page.dart';
-import 'package:monetar_ia/components/buttons/round_btn.dart';
 import 'package:monetar_ia/components/cards/white_card.dart';
 import 'package:monetar_ia/components/footers/footer.dart';
 import 'package:monetar_ia/views/login.dart';
@@ -20,7 +19,6 @@ import 'package:monetar_ia/models/transaction.dart';
 import 'package:monetar_ia/services/request_http.dart';
 import 'package:monetar_ia/services/token_storage.dart';
 import 'package:intl/intl.dart';
-import 'package:monetar_ia/utils/calculate_total.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -32,6 +30,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   DateTime selectedDate = DateTime.now();
   String userName = '';
+  String email = '';
   Transaction? lastTransaction;
   Transaction? lastExpense;
   Goal? lastGoal;
@@ -85,9 +84,7 @@ class _HomePageState extends State<HomePage> {
 
     if (mounted) {
       pageController.jumpToPage(1);
-    } else {
-      // print('O widget foi descartado.');
-    }
+    } else {}
   }
 
   // 1. Carregar as 10 ultimas transações para o gráfico de linha
@@ -247,9 +244,11 @@ class _HomePageState extends State<HomePage> {
       String? name = await _requestHttp.getUserName();
       setState(() {
         userName = name ?? 'Usuário';
+        email = email;
       });
     } catch (e) {
       print('Erro ao carregar o nome do usuário: $e');
+      print(email);
     }
   }
 
@@ -260,27 +259,28 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadTotalRevenue() async {
     try {
-      DateTime firstDayOfMonth =
-          DateTime(selectedDate.year, selectedDate.month, 1);
-      DateTime lastDayOfMonth =
-          DateTime(selectedDate.year, selectedDate.month + 1, 0);
+      DateTime now = DateTime.now();
+      int currentMonth = now.month;
+      int currentYear = now.year;
 
-      totalRevenue = 0.0;
+      totalRevenue = 0.0; // Total de receitas
 
-      var response = await _requestHttp.get(
-          'transactions/revenues?start_date=${firstDayOfMonth.toIso8601String()}&end_date=${lastDayOfMonth.toIso8601String()}');
+      var response = await _requestHttp.get('transactions/revenues');
+
       if (response.statusCode == 200) {
-        List<dynamic> decodedResponse = json.decode(response.body);
-        List<Transaction> transactions =
-            decodedResponse.map((data) => Transaction.fromJson(data)).toList();
+        var decodedResponse = utf8.decode(response.bodyBytes);
+        List<Transaction> transactions = (json.decode(decodedResponse) as List)
+            .map((data) => Transaction.fromJson(data))
+            .toList();
 
-        if (transactions.any((transaction) =>
-            transaction.transactionDate.year == selectedDate.year &&
-            transaction.transactionDate.month == selectedDate.month)) {
-          totalRevenue = calculateTotalRevenues(transactions);
-        } else {
-          totalRevenue = 0.0;
-        }
+        List<Transaction> currentMonthTransactions = transactions
+            .where((transaction) =>
+                transaction.transactionDate.year == currentYear &&
+                transaction.transactionDate.month == currentMonth)
+            .toList();
+
+        totalRevenue = currentMonthTransactions.fold(
+            0.0, (sum, transaction) => sum + transaction.amount);
 
         setState(() {});
       } else {
@@ -293,27 +293,28 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadTotalExpense() async {
     try {
-      DateTime firstDayOfMonth =
-          DateTime(selectedDate.year, selectedDate.month, 1);
-      DateTime lastDayOfMonth =
-          DateTime(selectedDate.year, selectedDate.month + 1, 0);
+      DateTime now = DateTime.now();
+      int currentMonth = now.month;
+      int currentYear = now.year;
 
-      totalExpense = 0.0;
+      totalExpense = 0.0; // Total de despesas
 
-      var response = await _requestHttp.get(
-          'transactions/expenses?start_date=${firstDayOfMonth.toIso8601String()}&end_date=${lastDayOfMonth.toIso8601String()}');
+      var response = await _requestHttp.get('transactions/expenses');
+
       if (response.statusCode == 200) {
-        List<dynamic> decodedResponse = json.decode(response.body);
-        List<Transaction> transactions =
-            decodedResponse.map((data) => Transaction.fromJson(data)).toList();
+        var decodedResponse = utf8.decode(response.bodyBytes);
+        List<Transaction> transactions = (json.decode(decodedResponse) as List)
+            .map((data) => Transaction.fromJson(data))
+            .toList();
 
-        if (transactions.any((transaction) =>
-            transaction.transactionDate.year == selectedDate.year &&
-            transaction.transactionDate.month == selectedDate.month)) {
-          totalExpense = calculateTotalExpenses(transactions);
-        } else {
-          totalExpense = 0.0;
-        }
+        List<Transaction> currentMonthTransactions = transactions
+            .where((transaction) =>
+                transaction.transactionDate.year == currentYear &&
+                transaction.transactionDate.month == currentMonth)
+            .toList();
+
+        totalExpense = currentMonthTransactions.fold(
+            0.0, (sum, transaction) => sum + transaction.amount);
 
         setState(() {});
       } else {
@@ -530,7 +531,7 @@ class _HomePageState extends State<HomePage> {
                       onDateChanged: (DateTime newDate) {
                         setState(() {
                           selectedDate = newDate;
-                          print('Data selecionada: $selectedDate');
+                          // print('Data selecionada: $selectedDate');
 
                           _loadTotalRevenue();
                           _loadTotalExpense();
@@ -692,7 +693,6 @@ class _HomePageState extends State<HomePage> {
                                             ),
                                           ),
                                           const SizedBox(height: 16),
-                                          // Indicadores de Página
                                           Row(
                                             mainAxisAlignment:
                                                 MainAxisAlignment.center,
@@ -771,7 +771,10 @@ class _HomePageState extends State<HomePage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const ProfilePage(),
+                          builder: (context) => ProfilePage(
+                            userName: userName,
+                            email: email,
+                          ),
                         ),
                       );
                     },
@@ -795,29 +798,35 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             Positioned(
-              bottom: 30,
               left: 16,
+              bottom: 0,
               right: 16,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  RoundButton(
-                    icon: Icons.mic,
-                    backgroundColor: Colors.white,
-                    borderColor: const Color(0xFF3D5936),
-                    iconColor: const Color(0xFF3D5936),
-                    onPressed: () {
+                  GestureDetector(
+                    onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const VoicePage(),
+                          builder: (context) => VoicePage(userName: userName),
                         ),
                       );
                     },
+                    child: Container(
+                      width: 200,
+                      height: 150,
+                      decoration: const BoxDecoration(
+                        image: DecorationImage(
+                          image: AssetImage('lib/assets/monetar_speak.png'),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
-            ),
+            )
           ],
         ),
       ),

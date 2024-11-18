@@ -161,7 +161,7 @@ class _GoalPageState extends State<GoalPage> {
                   onNextMonth: _onNextMonth,
                   onDateChanged: _onDateChanged,
                   backgroundColor: const Color(0xFF003566),
-                  circleIcon: Icons.emoji_events,
+                  imagePath: 'lib/assets/logo_goal.png',
                   circleIconColor: Colors.white,
                   circleBackgroundColor: const Color(0xFF003566),
                   label: 'Metas até $monthDisplay',
@@ -209,6 +209,8 @@ class _GoalPageState extends State<GoalPage> {
                                                     _showGoalDetailPopup(
                                                         context, goal),
                                                 child: InfoBox(
+                                                  backgroundColor:
+                                                      const Color(0xFFCCE5FF),
                                                   title: goal.name,
                                                   description:
                                                       'R\$ ${goal.targetAmount.toStringAsFixed(2)}',
