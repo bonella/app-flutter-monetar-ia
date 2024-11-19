@@ -133,7 +133,7 @@ class ColumnChart extends StatelessWidget {
                 barGroups: _buildBarGroups(),
                 barTouchData: BarTouchData(
                   touchTooltipData: BarTouchTooltipData(
-                    tooltipBgColor: const Color(0xFFEBEBEB),
+                    //tooltipBgColor: const Color(0xFFEBEBEB),
                   ),
                 ),
               ),
