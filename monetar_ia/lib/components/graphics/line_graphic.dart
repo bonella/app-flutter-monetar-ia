@@ -159,7 +159,7 @@ class LineGraphic extends StatelessWidget {
                 lineTouchData: LineTouchData(
                   enabled: true,
                   touchTooltipData: LineTouchTooltipData(
-                    tooltipBgColor: const Color(0xFFEBEBEB),
+                    //tooltipBgColor: const Color(0xFFEBEBEB),
                     tooltipRoundedRadius: 8,
                     tooltipPadding: const EdgeInsets.all(8),
                   ),
